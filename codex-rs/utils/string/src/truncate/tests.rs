@@ -1,8 +1,27 @@
+use super::approx_bytes_for_tokens;
 use super::split_budget;
 use super::split_string;
 use super::truncate_middle_chars;
 use super::truncate_middle_with_token_budget;
 use pretty_assertions::assert_eq;
+
+#[test]
+fn token_byte_budget_saturates_and_never_decreases() {
+    let last_exact = usize::MAX / 4;
+    let cases = [
+        (0, 0),
+        (1, 4),
+        (last_exact, usize::MAX - 3),
+        (last_exact + 1, usize::MAX),
+        (usize::MAX, usize::MAX),
+    ];
+    for (tokens, expected_bytes) in cases {
+        assert_eq!(approx_bytes_for_tokens(tokens), expected_bytes);
+    }
+    for pair in cases.windows(2) {
+        assert!(approx_bytes_for_tokens(pair[0].0) <= approx_bytes_for_tokens(pair[1].0));
+    }
+}
 
 #[test]
 fn split_string_works() {
