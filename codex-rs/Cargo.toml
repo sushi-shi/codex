@@ -532,7 +532,7 @@ wiremock = "0.6"
 zeroize = "1.8.2"
 
 [workspace.lints]
-rust = {}
+rust = { unexpected_cfgs = { level = "warn", check-cfg = ["cfg(flux)"] } }
 
 [workspace.lints.clippy]
 await_holding_invalid_type = "deny"

@@ -1,3 +1,4 @@
+use super::split_budget;
 use super::split_string;
 use super::truncate_middle_chars;
 use super::truncate_middle_with_token_budget;
@@ -114,4 +115,14 @@ fn truncate_middle_bytes_handles_utf8_content() {
     let s = "😀😀😀😀😀😀😀😀😀😀\nsecond line with text\n";
     let out = truncate_middle_chars(s, /*max_bytes*/ 20);
     assert_eq!(out, "😀😀…21 chars truncated…with text\n");
+}
+
+#[test]
+fn split_budget_preserves_and_balances_the_budget() {
+    for budget in (0..513).chain([usize::MAX - 1, usize::MAX]) {
+        let (prefix, suffix) = split_budget(budget);
+        assert_eq!(prefix.checked_add(suffix), Some(budget));
+        assert!(prefix <= suffix);
+        assert!(suffix - prefix <= 1);
+    }
 }
