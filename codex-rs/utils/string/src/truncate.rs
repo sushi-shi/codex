@@ -123,6 +123,13 @@ fn split_string(s: &str, beginning_bytes: usize, end_bytes: usize) -> (usize, &s
     (removed_chars, before, after)
 }
 
+// Preserve the whole budget and give the suffix the extra byte when odd.
+#[cfg_attr(
+    flux,
+    flux::sig(fn(budget: usize[@b]) ->
+        (usize[#prefix], usize{suffix:
+            prefix + suffix == b && prefix <= suffix && suffix <= prefix + 1}))
+)]
 fn split_budget(budget: usize) -> (usize, usize) {
     let left = budget / 2;
     (left, budget - left)
