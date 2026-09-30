@@ -73,8 +73,36 @@ pub fn approx_token_count(text: &str) -> usize {
     len.saturating_add(APPROX_BYTES_PER_TOKEN.saturating_sub(1)) / APPROX_BYTES_PER_TOKEN
 }
 
+/// Convert the token budget to bytes, saturating at the largest byte budget.
+#[cfg_attr(
+    flux,
+    flux::sig(fn(tokens: usize) -> usize{bytes:
+        bytes == (if tokens * 4 <= usize::MAX { tokens * 4 } else { usize::MAX })
+        && tokens <= bytes})
+)]
 pub const fn approx_bytes_for_tokens(tokens: usize) -> usize {
-    tokens.saturating_mul(APPROX_BYTES_PER_TOKEN)
+    let bytes = tokens.saturating_mul(APPROX_BYTES_PER_TOKEN);
+    #[cfg(flux)]
+    flux_core::num::lemmas::saturating_mul_expands(tokens, APPROX_BYTES_PER_TOKEN, bytes);
+    bytes
+}
+
+#[cfg(flux)]
+mod budget_proofs {
+    /// Increasing the token limit never decreases the available byte budget.
+    #[flux::sig(fn(smaller: usize, larger: usize) requires smaller <= larger)]
+    fn token_budget_is_monotone(smaller: usize, larger: usize) {
+        let smaller_bytes = super::approx_bytes_for_tokens(smaller);
+        let larger_bytes = super::approx_bytes_for_tokens(larger);
+        flux_core::num::lemmas::saturating_mul_monotone(
+            smaller,
+            larger,
+            super::APPROX_BYTES_PER_TOKEN,
+            smaller_bytes,
+            larger_bytes,
+        );
+        assert!(smaller_bytes <= larger_bytes);
+    }
 }
 
 pub fn approx_tokens_from_byte_count(bytes: usize) -> u64 {
