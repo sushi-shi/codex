@@ -37,7 +37,7 @@ struct ActiveTag<T> {
 /// Matching is literal and non-nested. If EOF is reached while a tag is still open, the parser
 /// auto-closes it and returns the buffered content as extracted data.
 #[derive(Debug)]
-#[refined(pending, active)]
+#[refined(specs, pending, active)]
 pub struct InlineHiddenTagParser<T>
 where
     T: Clone + Eq,
@@ -77,6 +77,8 @@ where
         }
     }
 
+    #[may_panic]
+    #[ensures(result.is_none_or(|(_, index)| index < self.specs.len()))]
     fn find_next_open(&self) -> Option<(usize, usize)> {
         self.specs
             .iter()
