@@ -65,11 +65,11 @@ pub enum PromptImageMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(flux, flux::refined_by(dimension: int, patches: int))]
+#[cfg_attr(flux, flux::refined_by(max_dimension: int, max_patches: int))]
 pub struct PromptImageResizeLimits {
-    #[cfg_attr(flux, flux::field(u32[dimension]))]
+    #[cfg_attr(flux, flux::field(u32[max_dimension]))]
     pub max_dimension: u32,
-    #[cfg_attr(flux, flux::field(usize[patches]))]
+    #[cfg_attr(flux, flux::field(usize[max_patches]))]
     pub max_patches: usize,
 }
 
@@ -310,10 +310,10 @@ fn load_data_url_for_prompt_with(
 
 #[cfg_attr(flux, flux::sig(fn(width: u32, height: u32, PromptImageResizeLimits[@limits]) ->
     (u32[#out_width], u32{out_height:
-        0 < out_width && out_width <= limits.dimension &&
-        0 < out_height && out_height <= limits.dimension &&
-        ((out_width + 31) / 32) * ((out_height + 31) / 32) <= limits.patches
-    }) requires limits.dimension > 0 && limits.patches > 0
+        0 < out_width && out_width <= limits.max_dimension &&
+        0 < out_height && out_height <= limits.max_dimension &&
+        ((out_width + 31) / 32) * ((out_height + 31) / 32) <= limits.max_patches
+    }) requires limits.max_dimension > 0 && limits.max_patches > 0
 ))]
 fn prompt_image_output_dimensions_for_limits(
     width: u32,
@@ -352,10 +352,10 @@ fn prompt_image_output_dimensions_for_limits(
     )
 }
 
-#[cfg_attr(flux, flux::sig(fn(width: u32, height: u32, PromptImageResizeLimits[@limits]) -> bool[
-    width <= limits.dimension && height <= limits.dimension &&
-    ((width + 31) / 32) * ((height + 31) / 32) <= limits.patches
-]))]
+#[cfg_attr(flux, flux_core::ensures(result == (
+    width <= limits.max_dimension && height <= limits.max_dimension &&
+    ((width + 31) / 32) * ((height + 31) / 32) <= limits.max_patches
+)))]
 fn prompt_image_dimensions_fit(width: u32, height: u32, limits: PromptImageResizeLimits) -> bool {
     let patches_wide = width.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
     let patches_high = height.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
@@ -369,9 +369,42 @@ fn prompt_image_dimensions_fit(width: u32, height: u32, limits: PromptImageResiz
 
 #[cfg(flux)]
 mod image_proofs {
+    use super::PromptImageResizeLimits;
+    use super::prompt_image_dimensions_fit;
+    use flux_core::requires;
+
     /// A grid with u32 side counts fits in the u64 patch-count accumulator.
     #[flux_core::ensures(width * height <= u64::MAX)]
     pub(super) fn patch_grid_product_fits_u64(width: u32, height: u32) {}
+
+    /// Relaxing either image cap cannot reject dimensions already admitted.
+    #[requires(small_dimension <= large_dimension && small_patches <= large_patches)]
+    fn increasing_limits_preserves_admission(
+        width: u32,
+        height: u32,
+        small_dimension: u32,
+        large_dimension: u32,
+        small_patches: usize,
+        large_patches: usize,
+    ) {
+        let admitted = prompt_image_dimensions_fit(
+            width,
+            height,
+            PromptImageResizeLimits {
+                max_dimension: small_dimension,
+                max_patches: small_patches,
+            },
+        );
+        let still_admitted = prompt_image_dimensions_fit(
+            width,
+            height,
+            PromptImageResizeLimits {
+                max_dimension: large_dimension,
+                max_patches: large_patches,
+            },
+        );
+        assert!(!admitted || still_admitted);
+    }
 }
 
 fn can_preserve_source_bytes(format: ImageFormat) -> bool {

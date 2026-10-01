@@ -8,6 +8,36 @@ use image::Rgba;
 use image::metadata::Orientation;
 
 const TEST_RGB_ICC_PROFILE: &[u8] = b"0123456789abcdefRGB ";
+
+#[test]
+fn resize_dimensions_respect_positive_limits_at_boundaries() {
+    let sides = [0, 1, 2, 31, 32, 33, 63, 64, 65, 1024, 2048, 6000, u32::MAX];
+    for max_dimension in [1, 31, 32, 33, 2048, 6000, u32::MAX] {
+        for max_patches in [1, 2, 3, 2500, 10_000, usize::MAX] {
+            let limits = PromptImageResizeLimits {
+                max_dimension,
+                max_patches,
+            };
+            for width in sides {
+                for height in sides {
+                    let (out_width, out_height) =
+                        prompt_image_output_dimensions_for_limits(width, height, limits);
+                    // Independent integer oracle for the floating-point resize path.
+                    let columns = (u128::from(out_width) + 31) / 32;
+                    let rows = (u128::from(out_height) + 31) / 32;
+                    assert!(
+                        out_width > 0
+                            && out_height > 0
+                            && out_width <= max_dimension
+                            && out_height <= max_dimension
+                            && columns * rows <= max_patches as u128,
+                        "{width}x{height}, {limits:?} produced {out_width}x{out_height}"
+                    );
+                }
+            }
+        }
+    }
+}
 const TEST_CMYK_ICC_PROFILE: &[u8] = b"0123456789abcdefCMYK";
 const ROTATE_90_EXIF: &[u8] = &[
     0x49, 0x49, 0x2a, 0x00, 0x08, 0x00, 0x00, 0x00, 0x01, 0x00, 0x12, 0x01, 0x03, 0x00, 0x01, 0x00,
