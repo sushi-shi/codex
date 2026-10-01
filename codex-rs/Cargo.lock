@@ -7060,7 +7060,7 @@ dependencies = [
 [[package]]
 name = "flux-attrs"
 version = "0.1.0"
-source = "git+https://github.com/sushi-shi/flux.git?rev=4514241fb44edbb2ba7cb5cdca2b6ad3673a1234#4514241fb44edbb2ba7cb5cdca2b6ad3673a1234"
+source = "git+https://github.com/sushi-shi/flux.git?rev=25ed63b9d0b5a749136b647fc6a6f6c82f76a651#25ed63b9d0b5a749136b647fc6a6f6c82f76a651"
 dependencies = [
  "flux-attrs-impl",
 ]
@@ -7068,7 +7068,7 @@ dependencies = [
 [[package]]
 name = "flux-attrs-impl"
 version = "0.1.0"
-source = "git+https://github.com/sushi-shi/flux.git?rev=4514241fb44edbb2ba7cb5cdca2b6ad3673a1234#4514241fb44edbb2ba7cb5cdca2b6ad3673a1234"
+source = "git+https://github.com/sushi-shi/flux.git?rev=25ed63b9d0b5a749136b647fc6a6f6c82f76a651#25ed63b9d0b5a749136b647fc6a6f6c82f76a651"
 dependencies = [
  "proc-macro2",
  "quote",
