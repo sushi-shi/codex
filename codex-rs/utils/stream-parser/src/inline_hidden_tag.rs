@@ -103,12 +103,18 @@ where
             .map_or(0, std::convert::identity)
     }
 
+    #[may_panic]
+    #[ensures(out.extracted.len() == old(out.extracted.len()))]
+    #[ensures(!pending.is_empty() || out.visible_text == old(out.visible_text))]
     fn push_visible_prefix(out: &mut StreamTextChunk<ExtractedInlineTag<T>>, pending: &str) {
         if !pending.is_empty() {
             out.visible_text.push_str(pending);
         }
     }
 
+    #[may_panic]
+    #[ensures(out.extracted.len() == old(out.extracted.len()))]
+    #[ensures(self.active.is_some() == old(self.active.is_some()))]
     fn drain_visible_to_suffix_match(
         &mut self,
         out: &mut StreamTextChunk<ExtractedInlineTag<T>>,
@@ -225,10 +231,35 @@ fn longest_suffix_prefix_len(s: &str, needle: &str) -> usize {
 
 #[cfg(flux)]
 mod state_proofs {
+    use super::ExtractedInlineTag;
     use super::InlineHiddenTagParser;
+    use crate::StreamTextChunk;
     use crate::StreamTextParser;
     use flux_attrs::ensures;
     use flux_attrs::may_panic;
+
+    /// Appending visible text cannot change the number of extracted tags.
+    #[may_panic]
+    #[ensures(result)]
+    fn visible_prefix_preserves_extraction_count<T: Clone + Eq>(
+        out: &mut StreamTextChunk<ExtractedInlineTag<T>>,
+        text: &str,
+    ) -> bool {
+        let count = out.extracted.len();
+        InlineHiddenTagParser::push_visible_prefix(out, text);
+        out.extracted.len() == count
+    }
+
+    /// An empty prefix preserves the exact visible text, including on repetition.
+    #[may_panic]
+    #[ensures(out.visible_text == old(out.visible_text))]
+    #[ensures(out.extracted.len() == old(out.extracted.len()))]
+    fn repeated_empty_prefix_preserves_output<T: Clone + Eq>(
+        out: &mut StreamTextChunk<ExtractedInlineTag<T>>,
+    ) {
+        InlineHiddenTagParser::push_visible_prefix(out, "");
+        InlineHiddenTagParser::push_visible_prefix(out, "");
+    }
 
     /// A successful finish resets both pieces of buffering state.
     #[may_panic]
