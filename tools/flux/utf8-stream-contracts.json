@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "updates": "Extends the constructor-only UTF-8 result in contract-pass.json to five parser methods and two checked caller lemmas.",
+  "base_commit": "a922dd485dad2c4974c53524d87cc6f1d1d84f4b",
+  "source_patch_sha256": "330deee09dfb607803abc7e284243c7ba80d6e59a5455015213622839269aeef",
+  "flux_commit": "e0b7ceced29544d515b44404a79a05d036371ae8",
+  "contracts": [
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::into_inner_lossy",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": false,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::new",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::push_bytes",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::finish",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::into_inner",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::state_proofs::first_chunk",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "utf8_stream::state_proofs::two_errors_preserve_remainder",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    }
+  ],
+  "properties": [
+    "At normal-return boundaries the pending buffer has at most three bytes.",
+    "An error from push_bytes preserves the entry buffer length.",
+    "Successful finish empties the buffer; an error preserves its entry length.",
+    "Construction starts empty; consuming an empty parser succeeds.",
+    "Checked lemmas call the real methods to compose construction with a chunk and to preserve length across two errors."
+  ],
+  "readability": "Imported requires/ensures/refined/may_panic macros use Rust names, len(), is_empty(), result, old(expr), and if/else. Generic payloads can stay opaque while selected fields are modeled. Lemmas are ordinary checked Rust functions. Codex still uses cfg_attr wrappers; the type invariant still uses a raw Flux length projection.",
+  "model_trust": "External UTF-8 decoder bounds, byte Vec mutation lengths, and leak-safe prefix drain bounds are trusted assumptions audited against Rust 8925ea358a0f. Native checks supplement the audit. See Flux handoff/COLLECTION-MODELS.md.",
+  "panic_scope": "push_bytes, finish, into_inner and the caller lemmas explicitly permit panics. Their contracts cover normal returns, including Err, not caught unwind states. Strict overflow remains enabled. A native callback panic exposes six pending bytes; this is not a panic-free API claim.",
+  "soundness_regression": "A minimized example initially accepted a false postcondition after catch_unwind. The checker now rejects that unsupported standard boundary, including fn-pointer coercion and runs without standard models. Other recovery/concurrency mechanisms and general destructor effects remain unproved.",
+  "validation": {
+    "flux_regression": {
+      "command": "cargo x test",
+      "passed": 1130,
+      "ignored": 7
+    },
+    "frontend_unit_tests_passed": 14,
+    "native_erasure_tests_passed": 2,
+    "native_model_tests_passed": 8,
+    "native_command": "cargo test -p flux-attrs-impl -p flux-attrs -p flux-alloc",
+    "rustdoc": "Passes; 67 extern-spec examples intentionally ignored. A proof-only module attribute initially broke rustdoc and is now gated on cfg(flux).",
+    "codex_native": {
+      "command": "just test -p codex-utils-stream-parser",
+      "passed": 29,
+      "skipped": 0
+    },
+    "native_coverage": "Exact buffered bytes and callback text checked across all 1024 partitions of A\u00e9\u4e2d\ud83e\udd80Z with invalid chunks injected before every chunk. Decoder checks include every Unicode scalar prefix and all one/two-byte inputs; drain checks include partial iteration and leaks.",
+    "mutations": [
+      "Remove invalid-chunk rollback",
+      "Drain zero bytes instead of the valid prefix",
+      "Remove push success clearing",
+      "Remove finish success clearing"
+    ],
+    "mutation_result": "All four rejected with proof failures; each restored byte-for-byte with the positive source patch hash.",
+    "performance": {
+      "uncached": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 563,
+          "body_ms": 514,
+          "solver_ms": 288,
+          "executed_solver_queries": 5,
+          "cached_bodies": 0
+        }
+      ],
+      "cached": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 604,
+          "body_ms": 218,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 5
+        }
+      ]
+    },
+    "elapsed_seconds": {
+      "uncached": 2.018,
+      "cached": 1.968
+    },
+    "performance_scope": "Single host/default-feature observations. Five cached bodies avoid new solver queries. Generated type-witness helper bodies are excluded from the seven handwritten body count; unselected dependencies are not proved.",
+    "format": "cargo fmt --all and just fmt passed"
+  },
+  "remaining": [
+    "Prove buffer contents and exact callback history with sequence models.",
+    "Propagate contracts through concrete parser implementations and all callers.",
+    "Model unwind transitions, recovery/concurrency mechanisms and general destructor effects.",
+    "Support Rust-shaped struct invariants and eliminate cfg_attr scaffolding through native dependency integration.",
+    "The remaining Codex corpus and other platform/feature configurations remain incomplete."
+  ],
+  "scope": "Seven selected handwritten bodies; coverage also records six generated Rust type-witness helpers and unselected bodies. Dependency proofs are not collected. Acceptance with observed models is not whole-program verification.",
+  "evidence": {
+    "file": "utf8-stream-evidence.json.gz",
+    "sha256": "fa26e6cff79982e32a23cea67c8fb3ba3d27ebae06f85c30fe6c16f94049f3e1"
+  },
+  "reproduce": "Build the recorded Flux commit, then run tools/codex/corpus.py check --source <prepared-codex> --flux <flux> --package codex-utils-stream-parser --only-check 'def:Utf8StreamParser::<P>::' --only-check 'def:state_proofs::' --timeout 120 --offline --proof-cache <cache> --output <fresh-directory>."
+}
