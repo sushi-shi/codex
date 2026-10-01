@@ -4,6 +4,8 @@
     }
 })]
 
+use flux_attrs::ensures;
+
 mod json;
 mod truncate;
 
@@ -17,10 +19,10 @@ pub use truncate::truncate_middle_with_token_budget;
 // Truncate a &str to a byte budget at a char boundary (prefix)
 #[inline]
 #[cfg_attr(flux, flux::qualifiers(PrefixBoundary))]
-#[cfg_attr(flux, flux_core::ensures(result.len() <= maxb))]
-#[cfg_attr(flux, flux_core::ensures(result.len() <= s.len()))]
-#[cfg_attr(flux, flux_core::ensures(s.starts_with(result)))]
-#[cfg_attr(flux, flux_core::ensures(s.len() > maxb || result == s))]
+#[ensures(result.len() <= maxb)]
+#[ensures(result.len() <= s.len())]
+#[ensures(s.starts_with(result))]
+#[ensures(s.len() > maxb || result == s)]
 pub fn take_bytes_at_char_boundary(s: &str, maxb: usize) -> &str {
     if s.len() <= maxb {
         return s;

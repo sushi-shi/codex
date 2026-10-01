@@ -1,12 +1,9 @@
 use std::error::Error;
 use std::fmt;
 
-#[cfg(flux)]
-use flux_core::ensures;
-#[cfg(flux)]
-use flux_core::may_panic;
-#[cfg(flux)]
-use flux_core::refined;
+use flux_attrs::ensures;
+use flux_attrs::may_panic;
+use flux_attrs::refined;
 
 use crate::StreamTextChunk;
 use crate::StreamTextParser;
@@ -49,7 +46,7 @@ impl Error for Utf8StreamParserError {}
 /// This is useful when upstream data arrives as `&[u8]` and a code point may be split across
 /// chunk boundaries (for example `0xC3` followed by `0xA9` for `é`).
 #[derive(Debug)]
-#[cfg_attr(flux, refined(pending_utf8))]
+#[refined(pending_utf8)]
 #[cfg_attr(flux, flux::invariant(pending_utf8.len <= 3))]
 pub struct Utf8StreamParser<P> {
     inner: P,
@@ -60,7 +57,7 @@ impl<P> Utf8StreamParser<P>
 where
     P: StreamTextParser,
 {
-    #[cfg_attr(flux, ensures(result.pending_utf8.is_empty()))]
+    #[ensures(result.pending_utf8.is_empty())]
     pub fn new(inner: P) -> Self {
         Self {
             inner,
@@ -75,10 +72,10 @@ where
     /// prefix from that chunk.
     // Allocation and user parser callbacks can panic; the state contract
     // describes normal returns, including error returns.
-    #[cfg_attr(flux, may_panic)]
-    #[cfg_attr(flux, ensures(self.pending_utf8.len() <= 3))]
-    #[cfg_attr(flux, ensures(result.is_ok()
-        || self.pending_utf8.len() == old(self.pending_utf8.len())))]
+    #[may_panic]
+    #[ensures(self.pending_utf8.len() <= 3)]
+    #[ensures(result.is_ok()
+        || self.pending_utf8.len() == old(self.pending_utf8.len()))]
     pub fn push_bytes(
         &mut self,
         chunk: &[u8],
@@ -124,10 +121,10 @@ where
         }
     }
 
-    #[cfg_attr(flux, may_panic)]
-    #[cfg_attr(flux, ensures(if result.is_ok() {
+    #[may_panic]
+    #[ensures(if result.is_ok() {
         self.pending_utf8.is_empty()
-    } else { self.pending_utf8.len() == old(self.pending_utf8.len()) }))]
+    } else { self.pending_utf8.len() == old(self.pending_utf8.len()) })]
     pub fn finish(&mut self) -> Result<StreamTextChunk<P::Extracted>, Utf8StreamParserError> {
         if !self.pending_utf8.is_empty() {
             match std::str::from_utf8(&self.pending_utf8) {
@@ -172,8 +169,8 @@ where
     ///
     /// Use [`Self::finish`] first if you want to flush buffered text into the wrapped parser.
     // An error drops the wrapped parser, whose destructor may panic.
-    #[cfg_attr(flux, may_panic)]
-    #[cfg_attr(flux, ensures(!old(self.pending_utf8.is_empty()) || result.is_ok()))]
+    #[may_panic]
+    #[ensures(!old(self.pending_utf8.is_empty()) || result.is_ok())]
     pub fn into_inner(self) -> Result<P, Utf8StreamParserError> {
         if self.pending_utf8.is_empty() {
             return Ok(self.inner);
@@ -204,8 +201,8 @@ where
 mod state_proofs {
     use super::Utf8StreamParser;
     use crate::StreamTextParser;
-    use flux_core::ensures;
-    use flux_core::may_panic;
+    use flux_attrs::ensures;
+    use flux_attrs::may_panic;
 
     /// Construction and one arbitrary chunk preserve the remainder bound.
     #[may_panic]

@@ -1,0 +1,361 @@
+{
+  "schema_version": 1,
+  "updates": "Use ordinary imported requires/ensures/refined/may_panic attributes consistently for existing readable contracts; no logical guarantees were weakened.",
+  "base_commit": "e14b4106944a180ac94d002a496da1417af503b1",
+  "source_patch_sha256": "d48b661be8c980c3b073ca5d00dc9feea1e9804611434467f2db4a7c83b971cf",
+  "flux_commit": "4514241fb44edbb2ba7cb5cdca2b6ad3673a1234",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/21",
+  "adoption": [
+    {
+      "file": "codex-rs/exec-server/src/noise_relay/ordered_ciphertext.rs",
+      "attributes": 14,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/history/src/retained_context.rs",
+      "attributes": 4,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/image/src/lib.rs",
+      "attributes": 3,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/stream-parser/src/inline_hidden_tag.rs",
+      "attributes": 16,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/stream-parser/src/stream_text.rs",
+      "attributes": 5,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/stream-parser/src/utf8_stream.rs",
+      "attributes": 13,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/string/src/lib.rs",
+      "attributes": 4,
+      "conditions_unchanged": true
+    },
+    {
+      "file": "codex-rs/utils/string/src/truncate.rs",
+      "attributes": 4,
+      "conditions_unchanged": true
+    }
+  ],
+  "attribute_count": 63,
+  "checked_scope": [
+    {
+      "package": "codex-utils-string",
+      "handwritten_bodies": 4,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-utils-image",
+      "handwritten_bodies": 3,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-history",
+      "handwritten_bodies": 2,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-exec-server",
+      "handwritten_bodies": 4,
+      "generated_bodies": 1
+    },
+    {
+      "package": "codex-utils-stream-parser",
+      "handwritten_bodies": 14,
+      "generated_bodies": 11
+    }
+  ],
+  "handwritten_bodies": 27,
+  "coverage_note": "Rechecks existing contracts and lemmas in five selected crates. Generated witnesses and derived bodies are counted separately. This is not whole-Codex verification or new behavioral coverage.",
+  "build_integration": {
+    "cargo": "Pinned normal flux-attrs dependency in five crates; no runtime checks.",
+    "bazel": "Explicit lib/flux-attrs and lib/flux-attrs-impl paths for Flux workspace wildcards; just bazel-lock-update and bazel mod deps --lockfile_mode=error passed under Bazel 9.0.0.",
+    "host": "Bazel ran in a temporary Nix FHS environment for its Linux helper binaries; repository toolchain versions were unchanged."
+  },
+  "macro_modes": [
+    "Native builds erase conditions without evaluating them.",
+    "Verifier-enabled macros select on the consuming crate cfg, allowing checked crates and unchecked dependencies to share a host macro library.",
+    "Native erasing macros loaded into a verifier now fail with a configuration error. Before the fix a false postcondition produced zero constraints and was accepted."
+  ],
+  "validation": {
+    "flux_regression": {
+      "passed": 1136,
+      "ignored": 7
+    },
+    "native_erasure": {
+      "ordinary_macro": 4,
+      "verifier_enabled_macro": 4
+    },
+    "wrong_macro_mode": "tools/codex/test_native_attributes.py passes; direct-driver reproduction rejected.",
+    "native_final": {
+      "passed": 99,
+      "scope": "93 tests across stream-parser/string/image/history and all six ordered-ciphertext tests; 320 unrelated exec-server library tests excluded from the final focused run."
+    },
+    "earlier_full_native": {
+      "parent_commit": "e14b4106944a180ac94d002a496da1417af503b1",
+      "changed_summary": "Summary [  17.581s] 651 tests run: 615 passed, 36 failed, 3 skipped",
+      "baseline_summary": "Summary [  18.214s] 651 tests run: 616 passed (1 flaky), 35 failed, 3 skipped",
+      "all_changed_failures_reproduced_on_baseline": true,
+      "baseline_flaky": [
+        "codex-exec-server::exec_process remote_process_preserves_empty_workspace_roots"
+      ],
+      "shared_final_failures": [
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_preserves_last_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_preserves_retry_limit",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_releases_waiting_command",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::recovers_on_last_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::recovers_on_second_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::stops_after_three_failures",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::succeeds_on_first_attempt",
+        "codex-exec-server::accepted_websocket accepted_websocket_interoperates_and_recovers_with_real_direct_executor",
+        "codex-exec-server::capability_discovery sandboxed_discovery_batches_roots_without_combining_different_permissions",
+        "codex-exec-server::exec_process exec_process_pushes_events::local",
+        "codex-exec-server::exec_process exec_process_pushes_events::remote",
+        "codex-exec-server::exec_process exec_process_rejects_write_without_pipe_stdin::local",
+        "codex-exec-server::exec_process exec_process_rejects_write_without_pipe_stdin::remote",
+        "codex-exec-server::exec_process exec_process_streams_output::local",
+        "codex-exec-server::exec_process exec_process_streams_output::remote",
+        "codex-exec-server::exec_process remote_exec_process_recovers_after_transport_disconnect",
+        "codex-exec-server::exec_process remote_process_keeps_sandbox_helper_visible_with_restricted_reads",
+        "codex-exec-server::exec_process remote_tty_process_uses_configured_sandbox_helper_with_hostile_path",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_pipe_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_retry_budget_exhausted",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_tty_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_pipe_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_retry_budget_exhausted",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_tty_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_bash_backed_sh",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_bash_env",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_pipe",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_tty",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_bash_env",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_pipe",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_sandbox",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_tty",
+        "codex-exec-server::exec_process shell_snapshot_v2_remote_managed_proxy_uses_prepared_execution_context",
+        "codex-exec-server::file_system_unix sandboxed_file_system_helper_finds_bwrap_on_preserved_path",
+        "codex-exec-server::process exec_server_keeps_control_requests_live_during_long_reads_and_queued_requests"
+      ],
+      "changed_final_failures": [
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_preserves_last_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_preserves_retry_limit",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::failed_prewarm_releases_waiting_command",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::recovers_on_last_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::recovers_on_second_attempt",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::stops_after_three_failures",
+        "codex-exec-server shell_snapshot::tests::snapshot_failure_retries_are_bounded_and_single_flight::succeeds_on_first_attempt",
+        "codex-exec-server::accepted_websocket accepted_websocket_interoperates_and_recovers_with_real_direct_executor",
+        "codex-exec-server::capability_discovery sandboxed_discovery_batches_roots_without_combining_different_permissions",
+        "codex-exec-server::exec_process exec_process_pushes_events::local",
+        "codex-exec-server::exec_process exec_process_pushes_events::remote",
+        "codex-exec-server::exec_process exec_process_rejects_write_without_pipe_stdin::local",
+        "codex-exec-server::exec_process exec_process_rejects_write_without_pipe_stdin::remote",
+        "codex-exec-server::exec_process exec_process_streams_output::local",
+        "codex-exec-server::exec_process exec_process_streams_output::remote",
+        "codex-exec-server::exec_process remote_exec_process_recovers_after_transport_disconnect",
+        "codex-exec-server::exec_process remote_process_keeps_sandbox_helper_visible_with_restricted_reads",
+        "codex-exec-server::exec_process remote_process_preserves_empty_workspace_roots",
+        "codex-exec-server::exec_process remote_tty_process_uses_configured_sandbox_helper_with_hostile_path",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_pipe_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_retry_budget_exhausted",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::local_tty_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_pipe_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_retry_budget_exhausted",
+        "codex-exec-server::exec_process shell_snapshot_v2_capture_failure_falls_back_and_retries::remote_tty_recovery",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_bash_backed_sh",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_bash_env",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_pipe",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::local_tty",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_bash_env",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_pipe",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_sandbox",
+        "codex-exec-server::exec_process shell_snapshot_v2_filters_profile_exports_and_stays_in_memory::remote_tty",
+        "codex-exec-server::exec_process shell_snapshot_v2_remote_managed_proxy_uses_prepared_execution_context",
+        "codex-exec-server::file_system_unix sandboxed_file_system_helper_finds_bwrap_on_preserved_path",
+        "codex-exec-server::process exec_server_keeps_control_requests_live_during_long_reads_and_queued_requests"
+      ]
+    },
+    "native_comparison_revision": "d5fa49bbd94019153f743e349c358eb535d3a33f",
+    "native_comparison_note": "Full five-package run preceded the native-mode misuse guard; all 36 failing tests also failed on the unmodified parent, with one recovering on retry. Retain failures rather than claiming a green full execution-server suite.",
+    "mutations": [
+      {
+        "name": "first-postcondition",
+        "package": "codex-utils-string",
+        "old": "#[ensures(result.len() <= maxb)]",
+        "new": "#[ensures(result.len() > maxb)]",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "last-postcondition",
+        "package": "codex-utils-stream-parser",
+        "old": "#[ensures(needle.is_char_boundary(result))]",
+        "new": "#[ensures(result > needle.len())]",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "unsupported-condition",
+        "package": "codex-utils-stream-parser",
+        "old": "#[ensures(needle.is_char_boundary(result))]",
+        "new": "#[ensures(unsupported_predicate(result))]",
+        "status": "unsupported_or_build_failure",
+        "expected_diagnostic": "unsupported contract expression",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "false-lemma",
+        "package": "codex-utils-stream-parser",
+        "old": "        parser.finish().is_empty()",
+        "new": "        !parser.finish().is_empty()",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "unmet-requirement",
+        "package": "codex-exec-server",
+        "old": "#[requires(frames.next_seq == u32::MAX - 1)]",
+        "new": "#[requires(frames.next_seq == u32::MAX)]",
+        "status": "proof_failure",
+        "expected_diagnostic": "may panic",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached": {
+          "wall_seconds": 3.621,
+          "checker_ms": 264,
+          "body_ms": 253,
+          "solver_ms": 202,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached": {
+          "wall_seconds": 1.517,
+          "checker_ms": 111,
+          "body_ms": 50,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached": {
+          "wall_seconds": 1.524,
+          "checker_ms": 90,
+          "body_ms": 81,
+          "solver_ms": 62,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached": {
+          "wall_seconds": 1.467,
+          "checker_ms": 50,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached": {
+          "wall_seconds": 12.243,
+          "checker_ms": 134,
+          "body_ms": 84,
+          "solver_ms": 38,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached": {
+          "wall_seconds": 2.172,
+          "checker_ms": 88,
+          "body_ms": 38,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached": {
+          "wall_seconds": 31.066,
+          "checker_ms": 6130,
+          "body_ms": 5258,
+          "solver_ms": 4761,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached": {
+          "wall_seconds": 10.698,
+          "checker_ms": 4513,
+          "body_ms": 349,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached": {
+          "wall_seconds": 4.234,
+          "checker_ms": 1791,
+          "body_ms": 1641,
+          "solver_ms": 954,
+          "executed_solver_queries": 11,
+          "cached_bodies": 0
+        },
+        "cached": {
+          "wall_seconds": 2.622,
+          "checker_ms": 1152,
+          "body_ms": 450,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 11
+        }
+      }
+    ],
+    "resource_limit": "The initial history run timed out during dependency compilation while a concurrent native baseline build exhausted host memory. With two build jobs it passed. Timing rows use final runs after contention cleared."
+  },
+  "remaining": [
+    "Raw Flux invariants, custom models, and contracts outside the readable subset still need simpler forms.",
+    "Whole Codex coverage remains incomplete. The inline push checker crash is a separate unfinished change on fix/loop-downcast-shapes; no experimental kernel changes are included here."
+  ],
+  "evidence": {
+    "path": "tools/flux/simple-attributes-evidence.json.gz",
+    "sha256": "e9cac506f2e1297355af991a158029604584d3b0acf81ba25ca71c6cef0a2984",
+    "bytes": 1955963,
+    "contains": "Exact source patches, coverage journals and function maps, verifier/model identities, logs, proof timings, mutants and restoration checks, native baseline comparison, and macro-mode reproductions."
+  }
+}

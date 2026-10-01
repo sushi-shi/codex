@@ -8,6 +8,7 @@ use base64::Engine;
 use base64::engine::general_purpose::STANDARD as BASE64_STANDARD;
 use codex_utils_cache::BlockingLruCache;
 use codex_utils_cache::sha1_digest;
+use flux_attrs::ensures;
 use image::ColorType;
 use image::DynamicImage;
 use image::GenericImageView;
@@ -352,10 +353,10 @@ fn prompt_image_output_dimensions_for_limits(
     )
 }
 
-#[cfg_attr(flux, flux_core::ensures(result == (
+#[ensures(result == (
     width <= limits.max_dimension && height <= limits.max_dimension &&
     ((width + 31) / 32) * ((height + 31) / 32) <= limits.max_patches
-)))]
+))]
 fn prompt_image_dimensions_fit(width: u32, height: u32, limits: PromptImageResizeLimits) -> bool {
     let patches_wide = width.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
     let patches_high = height.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
@@ -371,10 +372,11 @@ fn prompt_image_dimensions_fit(width: u32, height: u32, limits: PromptImageResiz
 mod image_proofs {
     use super::PromptImageResizeLimits;
     use super::prompt_image_dimensions_fit;
-    use flux_core::requires;
+    use flux_attrs::ensures;
+    use flux_attrs::requires;
 
     /// A grid with u32 side counts fits in the u64 patch-count accumulator.
-    #[flux_core::ensures(width * height <= u64::MAX)]
+    #[ensures(width * height <= u64::MAX)]
     pub(super) fn patch_grid_product_fits_u64(width: u32, height: u32) {}
 
     /// Relaxing either image cap cannot reject dimensions already admitted.

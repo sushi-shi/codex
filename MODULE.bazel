@@ -348,6 +348,17 @@ crate.from_cargo(
 
 bazel_dep(name = "zstd", version = "1.5.7")
 
+# Flux lists these workspace members through lib/*; give Bazel their exact paths.
+crate.annotation(
+    crate = "flux-attrs",
+    repositories = ["crates"],
+    strip_prefix = "lib/flux-attrs",
+)
+crate.annotation(
+    crate = "flux-attrs-impl",
+    repositories = ["crates"],
+    strip_prefix = "lib/flux-attrs-impl",
+)
 crate.annotation(
     # The Windows lint toolchain cannot reliably materialize blake3's native x86 assembly archives.
     crate = "blake3",
