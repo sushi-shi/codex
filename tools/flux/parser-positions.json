@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "implemented_change": "Verify that each returned opening-tag position is a UTF-8 boundary, then check the actual streaming push_str caller with that contract and the existing tag-index guarantee.",
+  "contract": "#[ensures(result.is_none_or(|(pos, _)| self.pending.is_char_boundary(pos)))]",
+  "caller_panic_effect": "push_str is marked may_panic, matching its trait declaration and its allocation and generic Clone operations. Its modeled index and overflow obligations are still checked.",
+  "base_commit": "807979c51540707d85e94aa5026ab780be721d6a",
+  "source_patch_sha256": "aafbadeb186910e7bfe083be50ac410aa5d9e10eca185814e5b3bf484b09d575",
+  "flux_commit": "d2b7ea21d4177217e10e93ebff162bbec9da9f19",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/29",
+  "integration": {
+    "macro_dependency": "d2b7ea21d4177217e10e93ebff162bbec9da9f19",
+    "checker_and_models": "d2b7ea21d4177217e10e93ebff162bbec9da9f19",
+    "cargo": "Only the Flux macro package revisions changed.",
+    "bazel": "just bazel-lock-update and bazel mod deps --lockfile_mode=error passed."
+  },
+  "mechanism": {
+    "syntax": "String-field is_char_boundary calls lower to the existing boundary model. A sealed Rust type witness validates standard String receivers and rejects custom lookalikes, including Deref wrappers.",
+    "inference": "The callback and iterator summaries infer the new position predicate from the existing function bodies.",
+    "search_offset": "str::find returns a byte boundary bounded by isize::MAX. Combining it with the delimiter length bound proves that the closing-match arithmetic fits usize.",
+    "trusted_model_basis": "A valid Rust str slice fits in isize::MAX bytes; Searcher returns valid byte boundaries. Standard-library extern specifications remain trusted models, using pinned Rust 8925ea358a0f265ca61026aadc7ecc506c545cbe."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1168,
+      "ignored": 7
+    },
+    "native_macro_tests": 21,
+    "native_stream_parser_tests": 30,
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 18,
+        "generated_bodies": 16
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 5.223,
+          "checker_ms": 295,
+          "body_ms": 279,
+          "solver_ms": 216,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.667,
+          "checker_ms": 58,
+          "body_ms": 47,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 1.567,
+          "checker_ms": 89,
+          "body_ms": 83,
+          "solver_ms": 61,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.517,
+          "checker_ms": 25,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 12.688,
+          "checker_ms": 130,
+          "body_ms": 75,
+          "solver_ms": 39,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.471,
+          "checker_ms": 97,
+          "body_ms": 41,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 25.474,
+          "checker_ms": 3793,
+          "body_ms": 3467,
+          "solver_ms": 3102,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 7.393,
+          "checker_ms": 897,
+          "body_ms": 329,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 56.211,
+          "checker_ms": 54569,
+          "body_ms": 52910,
+          "solver_ms": 52064,
+          "executed_solver_queries": 12,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 6.778,
+          "checker_ms": 5279,
+          "body_ms": 815,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 12
+        }
+      }
+    ],
+    "mutations": [
+      {
+        "name": "invalid-position",
+        "status": "proof_failure",
+        "wall_seconds": 57.963,
+        "source_restored": true
+      },
+      {
+        "name": "invalid-index",
+        "status": "proof_failure",
+        "wall_seconds": 7.277,
+        "source_restored": true
+      }
+    ],
+    "mutation_meaning": {
+      "invalid-position": "Return usize::MAX as the opening position; the UTF-8 boundary postcondition fails.",
+      "invalid-index": "Use self.specs.len() as the index inside push_str; the modeled vector precondition fails even though the caller permits panics."
+    },
+    "performance_note": "The stronger UTF-8 position proof raises the uncached parser proof cost. Cached checks execute zero solver queries. Runs use warm Cargo artifacts; whole-project throughput has not been established."
+  },
+  "proof_scope": "The opening position and tag index contracts are verified, and push_str passes obligations generated by the currently observed models. This is a partial-correctness check with permitted panics, not a complete parser behavior or panic-freedom proof.",
+  "remaining_model_obligations": [
+    "Model String indexing and drain with their UTF-8/range requirements and state effects.",
+    "Prove that matched delimiter ends and retained suffix splits are valid byte boundaries.",
+    "Relate the selected tag index to its delimiter value, then establish complete streaming interpretation and selection optimality.",
+    "Reduce the cost of inferred nested callback predicates."
+  ],
+  "evidence": {
+    "path": "tools/flux/parser-positions-evidence.json.gz",
+    "sha256": "7e41e06f0b00bd08cc13cd360d6d954e43d2513a533e6a4734f06edb109254f5",
+    "bytes": 679675,
+    "files": 96
+  }
+}

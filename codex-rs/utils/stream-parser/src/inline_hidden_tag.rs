@@ -79,6 +79,7 @@ where
 
     #[may_panic]
     #[ensures(result.is_none_or(|(_, index)| index < self.specs.len()))]
+    #[ensures(result.is_none_or(|(pos, _)| self.pending.is_char_boundary(pos)))]
     fn find_next_open(&self) -> Option<(usize, usize)> {
         self.specs
             .iter()
@@ -138,6 +139,7 @@ where
 {
     type Extracted = ExtractedInlineTag<T>;
 
+    #[may_panic]
     fn push_str(&mut self, chunk: &str) -> StreamTextChunk<Self::Extracted> {
         self.pending.push_str(chunk);
         let mut out = StreamTextChunk::default();
