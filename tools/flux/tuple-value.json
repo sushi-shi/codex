@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "implemented_change": "Flux connects a whole tuple value to its fields, carries tuple item predicates into iterator callbacks, and checks those predicates against iterator implementations.",
+  "codex_obligation": "The index returned by InlineHiddenTagParser::find_next_open must be within self.specs. Its iterator chain yields tuples, motivating this checker support.",
+  "mechanism": "Tuple indices track construction, writes, joins, and partial moves. Callback signatures retain tuple constraints, associated item sorts normalize before logical variables are created, and tuple type holes resolve with Rust type inference. Redundant existential tuple indices are eliminated during unpacking.",
+  "base_commit": "5aff5fd7c5915a0a26a88ebc9a86ee8047d55ecc",
+  "source_patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_patch_scope": "Selected checks used clean Codex source. The separately recorded temporary parser candidate was restored before writing this ledger.",
+  "flux_commit": "f09c70e6f6814c0b1c5249324900dbfb6e58146e",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/26",
+  "integration": {
+    "macro_dependency": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+    "checker_and_models": "f09c70e6f6814c0b1c5249324900dbfb6e58146e",
+    "metadata_compatibility": "Model metadata was rebuilt for the new tuple representation and type-hole sort."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1156,
+      "ignored": 7
+    },
+    "positive_cases": [
+      "tuple projections and whole-value contracts",
+      "branches and loops",
+      "mutable borrows and nested struct mutation",
+      "partial moves and boxed fields",
+      "type holes and callback input constraints",
+      "tuple iterator item predicates"
+    ],
+    "negative_cases": [
+      "stale values after mutation or a branch",
+      "incorrect whole-tuple arguments",
+      "incorrect callback assertions",
+      "false iterator item predicates"
+    ],
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 16,
+        "generated_bodies": 14
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 3.623,
+          "checker_ms": 294,
+          "body_ms": 280,
+          "solver_ms": 207,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.517,
+          "checker_ms": 110,
+          "body_ms": 52,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 2.019,
+          "checker_ms": 131,
+          "body_ms": 120,
+          "solver_ms": 87,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.518,
+          "checker_ms": 55,
+          "body_ms": 21,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 3.735,
+          "checker_ms": 189,
+          "body_ms": 107,
+          "solver_ms": 52,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.322,
+          "checker_ms": 105,
+          "body_ms": 38,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 13.319,
+          "checker_ms": 4473,
+          "body_ms": 3968,
+          "solver_ms": 3575,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 10.497,
+          "checker_ms": 4359,
+          "body_ms": 355,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 2.824,
+          "checker_ms": 1317,
+          "body_ms": 1203,
+          "solver_ms": 678,
+          "executed_solver_queries": 13,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.571,
+          "checker_ms": 1141,
+          "body_ms": 474,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 13
+        }
+      }
+    ],
+    "performance_note": "Uncached solver checks reused populated Cargo caches. Cached checks executed zero solver queries. One comparison does not establish a general speedup."
+  },
+  "parser_candidate": {
+    "function": "inline_hidden_tag::InlineHiddenTagParser::<T>::find_next_open",
+    "contract": "#[ensures(result.is_none_or(|(_, index)| index < self.specs.len()))]",
+    "source_patch_sha256": "39a358c16493c1ff73f3bcb250c34bbbf25787f49067a66900e7245ad92bf005",
+    "status": "proof_failure",
+    "timed_out": false,
+    "source_restored": true,
+    "wall_seconds": 1.869,
+    "diagnostics": [
+      "The final map cannot establish the index bound.",
+      "Nested callbacks retain panic obligations for str::find and Ordering::then_with."
+    ],
+    "next_work": "Use tuple value predicates in Enumerate and propagate callback results through filter_map and min_by, then retry this same index obligation. Check Enumerate exhaustion and counter overflow against the pinned Rust source when updating that model."
+  },
+  "proof_scope": "This layer adds a checked tuple abstraction and revalidates the existing selected contracts. The parser index requirement remains unproved; arbitrary summary inference and whole-Codex verification remain open.",
+  "evidence": {
+    "path": "tools/flux/tuple-value-evidence.json.gz",
+    "sha256": "031cb850f7a116a9ba11df71c31a5152260b1ff70e04c9b70ff5ae070c743ccc",
+    "bytes": 484154,
+    "files": 61
+  }
+}
