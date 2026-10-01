@@ -50,3 +50,22 @@ fn rejects_unbounded_reordering() {
             .is_err()
     );
 }
+
+#[test]
+fn exhausted_sequence_rejects_repeated_advances_without_changing_buffer() {
+    let pending = std::collections::BTreeMap::from([(u32::MAX, b"last".to_vec())]);
+    let mut frames = OrderedCiphertextFrames {
+        next_seq: u32::MAX - 1,
+        pending: pending.clone(),
+        pending_bytes: 4,
+    };
+
+    assert!(frames.advance().is_ok());
+    for _ in 0..2 {
+        assert!(frames.advance().is_err());
+        assert_eq!(
+            (frames.next_seq, &frames.pending, frames.pending_bytes),
+            (u32::MAX, &pending, 4)
+        );
+    }
+}

@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "base_commit": "f8df0c3f5f8e635e7fcab95a50002f0ed1bb29ba",
+  "source_patch_sha256": "485ac4458aff43e280ba6316463d643a2029c73a6d4db84d3150dc1bcab3418a",
+  "flux_commit": "27a1d0c61fb1e7693209a352469a6321380e0b76",
+  "flux_evidence_base_commit": "2edb9df1a708ebe3f78fa7569bd01248235e1466",
+  "flux_evidence_patch_sha256": "8d17276f0199f21a91d955d55d7dd42aed7beb1fa38a390c796360a4389d0020",
+  "contracts": [
+    {
+      "function": "retained_context::RetainedContext::reserve_order",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "property": "Returns the entry counter and increments it with saturation at u64::MAX.",
+      "evidence_run": "readable-state-defaults-final2"
+    },
+    {
+      "function": "retained_context::order_proofs::consecutive_reservations",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "property": "Two reservations are strictly ordered and advance the counter by two when both increments fit.",
+      "evidence_run": "readable-state-defaults-final2"
+    },
+    {
+      "function": "noise_relay::ordered_ciphertext::OrderedCiphertextFrames::advance",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "property": "Success exactly before u32::MAX; increments once on success, preserves the counter on failure, preserves pending_bytes on either outcome.",
+      "evidence_run": "readable-state-defaults-final2"
+    },
+    {
+      "function": "noise_relay::ordered_ciphertext::sequence_proofs::exhaustion_preserves_sequence",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "property": "From MAX-1, the last success followed by failure leaves the sequence at MAX and preserves pending_bytes.",
+      "evidence_run": "readable-state-defaults-final2"
+    },
+    {
+      "function": "<noise_relay::ordered_ciphertext::OrderedCiphertextFrames as std::default::Default>::default",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": false,
+      "property": "Derived initialization establishes the pending_bytes bound using exact primitive default models.",
+      "evidence_run": "readable-state-defaults-buffer-obligations"
+    }
+  ],
+  "readability": "requires/ensures with old(expr), mutable receiver/parameter state, pure if/else, Result is_ok/is_err, and Vec lengths. Omitted mutable fields are not implicitly preserved. Result payloads and Vec contents remain unmodeled.",
+  "models": {
+    "str_to_string": "Default-false Display capability enables panic-free string conversion for audited str specialization only. No blanket claim for user Display implementations. Allocation aborts remain possible.",
+    "primitive_defaults": "Exact zero for all signed/unsigned integer widths, false for bool; no guarantee for arbitrary Default impls.",
+    "extern_spec_fix": "PhantomData generic fields allow ?Sized parameters before the wrapper's final external Self field.",
+    "trust": "External models are assumptions audited against pinned Rust 8925ea358a0f; positive/negative UI and native tests can falsify model claims but are not a formal proof of Rust internals."
+  },
+  "validation": {
+    "flux_regression": {
+      "passed": 1113,
+      "ignored": 7,
+      "command": "cargo x test"
+    },
+    "frontend_unit_tests_passed": 12,
+    "native_erasure_tests_passed": 2,
+    "native_string_model_tests_passed": 2,
+    "codex_focused": {
+      "command": "just test -p codex-history -p codex-exec-server --lib -E \"package(codex-history) | test(noise_relay::ordered_ciphertext::tests::)\"",
+      "passed": 32,
+      "skipped_by_selection": 320
+    },
+    "codex_affected_crates": {
+      "command": "just test -p codex-history -p codex-exec-server",
+      "passed": 549,
+      "failed": 35,
+      "skipped": 3,
+      "flaky_among_passed": 2
+    },
+    "codex_unit_isolation": {
+      "command": "just test -p codex-history -p codex-exec-server --lib",
+      "passed": 345,
+      "failed": 7
+    },
+    "native_limitations": "Broader suites are not green. Logs include missing /bin/bash, missing executable/sandbox setup errors and other environment-sensitive process failures. No sandbox code or environment variables were changed. The seven isolated unit failures are shell snapshot cases using /bin/bash.",
+    "format": "just fmt and cargo fmt --all passed",
+    "mutations": [
+      "History increment +1 changed to +2 rejected.",
+      "Relay checked_add(1) changed to checked_add(0) rejected.",
+      "Relay advance resetting pending_bytes to zero rejected."
+    ],
+    "mutation_restoration": "Every experiment restored the original source byte-for-byte; git diff SHA256 matches the positive run.",
+    "cache": "Unchanged rerun reused all four body constraint results with zero solver queries. Each changed implementation forced a new failing query while its unchanged caller lemma reused its result. Caller success alone is not proof of a failed callee.",
+    "performance": {
+      "uncached": [
+        {
+          "package": "codex-history",
+          "elapsed_seconds": 2.071,
+          "observations": [
+            {
+              "timings": "codex_history-timings.json",
+              "checker_ms": 95,
+              "body_ms": 74,
+              "solver_ms": 38,
+              "executed_solver_queries": 2,
+              "cached_bodies": 0
+            }
+          ]
+        },
+        {
+          "package": "codex-exec-server",
+          "elapsed_seconds": 6.258,
+          "observations": [
+            {
+              "timings": "codex_exec_server-timings.json",
+              "checker_ms": 295,
+              "body_ms": 195,
+              "solver_ms": 45,
+              "executed_solver_queries": 2,
+              "cached_bodies": 0
+            }
+          ]
+        }
+      ],
+      "cached": [
+        {
+          "package": "codex-history",
+          "elapsed_seconds": 1.971,
+          "observations": [
+            {
+              "timings": "codex_history-timings.json",
+              "checker_ms": 54,
+              "body_ms": 34,
+              "solver_ms": 0,
+              "executed_solver_queries": 0,
+              "cached_bodies": 2
+            }
+          ]
+        },
+        {
+          "package": "codex-exec-server",
+          "elapsed_seconds": 6.156,
+          "observations": [
+            {
+              "timings": "codex_exec_server-timings.json",
+              "checker_ms": 231,
+              "body_ms": 141,
+              "solver_ms": 0,
+              "executed_solver_queries": 0,
+              "cached_bodies": 2
+            }
+          ]
+        }
+      ]
+    },
+    "performance_scope": "Single observations on a shared host; Cargo and analysis overhead remain even with no new solver queries."
+  },
+  "remaining": [
+    "OrderedCiphertextFrames::push has a readable monotonic-sequence contract and a buffer-cap type invariant, but its body remains unproved.",
+    "Missing BTreeMap contains_key/insert/remove panic and relational models; pending_bytes must be tied to the sum of stored payload lengths.",
+    "Vec/Box allocation effects and payload allocation bounds are needed for push and pending-byte arithmetic.",
+    "Complete enforcement of the type invariant depends on proving all mutating methods and callers.",
+    "Whole Codex mapping, previously recorded async/parser/image obligations, other targets and feature/platform configurations remain incomplete."
+  ],
+  "scope": "Host/default-feature selected bodies only. Unselected functions and dependency proofs are not collected. Accepted means accepted with observed external models, not whole-program verification.",
+  "evidence": {
+    "file": "state-contracts-evidence.json.gz",
+    "sha256": "e30268ba7860258aff83d71932e71de971ef5660d7a64ac3031bfe9afac1b4d1"
+  },
+  "reproduce": "Build the Flux commit; run tools/codex/corpus.py check on this prepared Codex branch with --package codex-history --package codex-exec-server --only-check def:reserve_order --only-check def:order_proofs:: --only-check def:OrderedCiphertextFrames::advance --only-check def:sequence_proofs:: --proof-cache <cache> --timeout 120 --offline --output <fresh-directory>. Check def:ordered_ciphertext:: separately to reproduce the remaining buffer failures."
+}
