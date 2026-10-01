@@ -35,7 +35,9 @@ impl EntryPool {
     }
 }
 
+#[cfg_attr(flux, flux::refined_by(entry_count: int))]
 pub(super) struct TranscriptWindow<'a> {
+    #[cfg_attr(flux, flux::field(&[TranscriptEntry][entry_count]))]
     entries: &'a [TranscriptEntry],
     message_token_budget: usize,
     tool_token_budget: usize,
@@ -46,6 +48,9 @@ pub(super) struct TranscriptWindow<'a> {
 }
 
 impl<'a> TranscriptWindow<'a> {
+    #[cfg_attr(flux, flux::sig(fn(
+        &[TranscriptEntry][@entry_count], &TranscriptRetentionConfig, usize
+    ) -> TranscriptWindow[entry_count]))]
     pub(super) fn new(
         entries: &'a [TranscriptEntry],
         config: &TranscriptRetentionConfig,
@@ -62,6 +67,9 @@ impl<'a> TranscriptWindow<'a> {
         }
     }
 
+    #[cfg_attr(flux, flux::sig(fn(&mut TranscriptWindow[@entry_count], index: usize)
+        requires index < entry_count
+    ))]
     pub(super) fn insert(&mut self, index: usize) {
         let kind = self.entries[index].kind;
         let tokens = self.entries[index].tokens;
@@ -87,6 +95,7 @@ impl<'a> TranscriptWindow<'a> {
             .chain(self.tools.indices)
     }
 
+    #[cfg_attr(flux, flux::sig(fn(&mut TranscriptWindow[@entry_count], TranscriptEntryKind, usize) -> bool))]
     fn make_room_for_token_budget(&mut self, kind: TranscriptEntryKind, tokens: usize) -> bool {
         let token_budget = match kind {
             TranscriptEntryKind::ProtectedMessage | TranscriptEntryKind::Message => {
@@ -143,6 +152,7 @@ impl<'a> TranscriptWindow<'a> {
         self.has_token_capacity(kind, tokens, token_budget)
     }
 
+    #[cfg_attr(flux, flux::sig(fn(&mut TranscriptWindow[@entry_count], TranscriptEntryKind) -> bool))]
     fn make_room_for_entry_limit(&mut self, kind: TranscriptEntryKind) -> bool {
         let retained_count = self.protected_messages.indices.len()
             + self.ordinary_messages.indices.len()
@@ -226,6 +236,7 @@ impl<'a> TranscriptWindow<'a> {
         }
     }
 
+    #[cfg_attr(flux, flux::sig(fn(&mut TranscriptWindow[@entry_count], TranscriptEntryKind) -> &mut EntryPool))]
     fn pool_mut(&mut self, kind: TranscriptEntryKind) -> &mut EntryPool {
         match kind {
             TranscriptEntryKind::ProtectedMessage => &mut self.protected_messages,

@@ -1,3 +1,9 @@
+#![cfg_attr(flux, flux::defs {
+    local qualifier PrefixBoundary(offset: int, text: str) {
+        flux_core::str::boundary(text, offset)
+    }
+})]
+
 mod json;
 mod truncate;
 
@@ -10,6 +16,13 @@ pub use truncate::truncate_middle_with_token_budget;
 
 // Truncate a &str to a byte budget at a char boundary (prefix)
 #[inline]
+#[cfg_attr(flux, flux::qualifiers(PrefixBoundary))]
+#[cfg_attr(flux, flux::sig(fn(s: &str[@text], maxb: usize) -> &str{prefix:
+    flux_core::str::byte_len(prefix) <= maxb &&
+    flux_core::str::byte_len(prefix) <= flux_core::str::byte_len(text) &&
+    str_prefix_of(prefix, text) &&
+    (flux_core::str::byte_len(text) <= maxb => prefix == text)
+}))]
 pub fn take_bytes_at_char_boundary(s: &str, maxb: usize) -> &str {
     if s.len() <= maxb {
         return s;

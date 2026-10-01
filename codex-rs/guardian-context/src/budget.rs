@@ -85,13 +85,20 @@ pub struct RequestBudget {
 
 /// Size of section evidence, excluding enclosing message serialization overhead.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+#[cfg_attr(flux, flux::refined_by(text: int, image: int, count: int))]
 pub struct SectionCost {
+    #[cfg_attr(flux, flux::field(usize[text]))]
     pub text_bytes: usize,
+    #[cfg_attr(flux, flux::field(usize[image]))]
     pub image_bytes: usize,
+    #[cfg_attr(flux, flux::field(usize[count]))]
     pub image_count: usize,
 }
 
 impl SectionCost {
+    #[cfg_attr(flux, flux::sig(fn(SectionCost[@before], &ContentItem) -> SectionCost{after:
+        after.text >= before.text && after.image >= before.image && after.count >= before.count
+    }))]
     fn add_content(mut self, item: &ContentItem) -> Self {
         match item {
             ContentItem::InputText { text } | ContentItem::OutputText { text } => {
@@ -220,7 +227,8 @@ fn adjusted_tokens(mut bytes: usize, content: &[ContentItem]) -> usize {
 }
 
 #[derive(Default)]
-struct ByteCount(usize);
+#[cfg_attr(flux, flux::refined_by(bytes: int))]
+struct ByteCount(#[cfg_attr(flux, flux::field(usize[bytes]))] usize);
 
 impl ByteCount {
     fn item(item: &ResponseItem) -> usize {
@@ -237,11 +245,18 @@ impl ByteCount {
 }
 
 impl Write for ByteCount {
+    #[cfg_attr(flux, flux::sig(fn(counter: &strg ByteCount[@before], &[u8][@len])
+        -> std::io::Result<usize[len]>
+        ensures counter: ByteCount[if before + len <= usize::MAX { before + len } else { usize::MAX }]
+    ))]
     fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
         self.0 = self.0.saturating_add(bytes.len());
         Ok(bytes.len())
     }
 
+    #[cfg_attr(flux, flux::sig(fn(counter: &strg ByteCount[@before]) -> std::io::Result<()>
+        ensures counter: ByteCount[before]
+    ))]
     fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
     }

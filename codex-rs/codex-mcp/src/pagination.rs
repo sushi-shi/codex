@@ -12,6 +12,9 @@ pub(crate) const MAX_CODEX_APPS_TOOL_CATALOG_ITEMS: usize = 8_192;
 const MAX_MCP_PAGINATION_CURSOR_BYTES: usize = 64 * 1024;
 const DEFAULT_MCP_PAGINATION_TIMEOUT: Duration = Duration::from_secs(30);
 
+#[cfg_attr(flux, flux::sig(async fn<T, F, Fut>(
+    &str, Option<Duration>, F
+) -> Result<Vec<T>{n: n <= MAX_MCP_CATALOG_ITEMS}>))]
 pub(crate) async fn collect_paginated<T, F, Fut>(
     method: &str,
     overall_timeout: Option<Duration>,
@@ -24,6 +27,9 @@ where
     collect_paginated_with_limit(method, overall_timeout, MAX_MCP_CATALOG_ITEMS, fetch).await
 }
 
+#[cfg_attr(flux, flux::sig(async fn<T, F, Fut>(
+    &str, Option<Duration>, max_items: usize, F
+) -> Result<Vec<T>{n: n <= max_items}>))]
 pub(crate) async fn collect_paginated_with_limit<T, F, Fut>(
     method: &str,
     overall_timeout: Option<Duration>,
