@@ -65,8 +65,11 @@ pub enum PromptImageMode {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(flux, flux::refined_by(dimension: int, patches: int))]
 pub struct PromptImageResizeLimits {
+    #[cfg_attr(flux, flux::field(u32[dimension]))]
     pub max_dimension: u32,
+    #[cfg_attr(flux, flux::field(usize[patches]))]
     pub max_patches: usize,
 }
 
@@ -305,6 +308,13 @@ fn load_data_url_for_prompt_with(
     load(Path::new("<data-url-image>"), file_bytes, mode)
 }
 
+#[cfg_attr(flux, flux::sig(fn(width: u32, height: u32, PromptImageResizeLimits[@limits]) ->
+    (u32[#out_width], u32{out_height:
+        0 < out_width && out_width <= limits.dimension &&
+        0 < out_height && out_height <= limits.dimension &&
+        ((out_width + 31) / 32) * ((out_height + 31) / 32) <= limits.patches
+    }) requires limits.dimension > 0 && limits.patches > 0
+))]
 fn prompt_image_output_dimensions_for_limits(
     width: u32,
     height: u32,
@@ -342,13 +352,26 @@ fn prompt_image_output_dimensions_for_limits(
     )
 }
 
+#[cfg_attr(flux, flux::sig(fn(width: u32, height: u32, PromptImageResizeLimits[@limits]) -> bool[
+    width <= limits.dimension && height <= limits.dimension &&
+    ((width + 31) / 32) * ((height + 31) / 32) <= limits.patches
+]))]
 fn prompt_image_dimensions_fit(width: u32, height: u32, limits: PromptImageResizeLimits) -> bool {
     let patches_wide = width.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
     let patches_high = height.div_ceil(PROMPT_IMAGE_PATCH_SIZE);
+    #[cfg(flux)]
+    image_proofs::patch_grid_product_fits_u64(patches_wide, patches_high);
     let patch_count = u64::from(patches_wide) * u64::from(patches_high);
     width <= limits.max_dimension
         && height <= limits.max_dimension
         && patch_count <= limits.max_patches as u64
+}
+
+#[cfg(flux)]
+mod image_proofs {
+    /// A grid with u32 side counts fits in the u64 patch-count accumulator.
+    #[flux_core::ensures(width * height <= u64::MAX)]
+    pub(super) fn patch_grid_product_fits_u64(width: u32, height: u32) {}
 }
 
 fn can_preserve_source_bytes(format: ImageFormat) -> bool {

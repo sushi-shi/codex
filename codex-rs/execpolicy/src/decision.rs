@@ -6,6 +6,7 @@ use crate::error::Result;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq, Ord, PartialOrd, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(flux, flux::reflect)]
 pub enum Decision {
     /// Command may run without further approval.
     Allow,

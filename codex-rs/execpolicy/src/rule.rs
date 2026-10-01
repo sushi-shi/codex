@@ -61,7 +61,11 @@ impl PrefixPattern {
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
+#[cfg_attr(flux, flux::refined_by(decision: Decision))]
 pub enum RuleMatch {
+    #[cfg_attr(flux, flux::variant({
+        Vec<String>, Decision[@decision], Option<AbsolutePathBuf>, Option<String>
+    } -> RuleMatch[decision]))]
     PrefixRuleMatch {
         #[serde(rename = "matchedPrefix")]
         matched_prefix: Vec<String>,
@@ -75,6 +79,7 @@ pub enum RuleMatch {
         #[serde(skip_serializing_if = "Option::is_none")]
         justification: Option<String>,
     },
+    #[cfg_attr(flux, flux::variant({Vec<String>, Decision[@decision]} -> RuleMatch[decision]))]
     HeuristicsRuleMatch {
         command: Vec<String>,
         decision: Decision,
@@ -82,6 +87,7 @@ pub enum RuleMatch {
 }
 
 impl RuleMatch {
+    #[cfg_attr(flux, flux::sig(fn(&RuleMatch[@decision]) -> Decision[decision]))]
     pub fn decision(&self) -> Decision {
         match self {
             Self::PrefixRuleMatch { decision, .. } => *decision,
@@ -89,6 +95,7 @@ impl RuleMatch {
         }
     }
 
+    #[cfg_attr(flux, flux::sig(fn(RuleMatch[@decision], &AbsolutePathBuf) -> RuleMatch[decision]))]
     pub fn with_resolved_program(self, resolved_program: &AbsolutePathBuf) -> Self {
         match self {
             Self::PrefixRuleMatch {
@@ -104,6 +111,27 @@ impl RuleMatch {
             },
             other => other,
         }
+    }
+}
+
+#[cfg(flux)]
+mod resolution_proofs {
+    use super::AbsolutePathBuf;
+    use super::Decision;
+    use super::RuleMatch;
+
+    /// Decorating a denied match with its executable must never permit execution.
+    #[flux::sig(fn(RuleMatch[Decision::Forbidden], &AbsolutePathBuf))]
+    fn resolved_forbidden_rule_stays_forbidden(rule: RuleMatch, program: &AbsolutePathBuf) {
+        let resolved = rule.with_resolved_program(program);
+        assert!(matches!(resolved.decision(), Decision::Forbidden));
+    }
+
+    /// Resolving the executable also preserves the requirement for user approval.
+    #[flux::sig(fn(RuleMatch[Decision::Prompt], &AbsolutePathBuf))]
+    fn resolved_prompt_still_requires_approval(rule: RuleMatch, program: &AbsolutePathBuf) {
+        let resolved = rule.with_resolved_program(program);
+        assert!(matches!(resolved.decision(), Decision::Prompt));
     }
 }
 
