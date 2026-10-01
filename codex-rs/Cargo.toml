@@ -160,7 +160,7 @@ edition = "2024"
 license = "Apache-2.0"
 
 [workspace.dependencies]
-flux-attrs = { git = "https://github.com/sushi-shi/flux.git", rev = "25ed63b9d0b5a749136b647fc6a6f6c82f76a651" }
+flux-attrs = { git = "https://github.com/sushi-shi/flux.git", rev = "d2b7ea21d4177217e10e93ebff162bbec9da9f19" }
 
 # Internal
 codex-realtime-webrtc = { path = "realtime-webrtc" }
