@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "base_commit": "16d44e43e07f77286d7d7e31ecebaf1a894da9b6",
+  "flux_commit": "68bf3fa14d8e6118cc51b730a254e58a9f5c48f1",
+  "macro_binary_sha256": "9a15f069178455dc062e100d2c92df48d55509fd8264981ca0e41b17a7cf9be7",
+  "rust_files_sha256": {
+    "codex-rs/execpolicy/src/decision.rs": "61ae16ce058ea1084c28db3ecbd655a7fab630157a08ed30463f64035063e4a8",
+    "codex-rs/execpolicy/src/rule.rs": "ade27e4effd577eaefe6c58dc28cd330b6bce247b5f9cf73cce2db4293593c62",
+    "codex-rs/utils/image/src/lib.rs": "8ba3aab053e5d01ea61ea9c0c50051cb798cd7f0947d9f838518ba65e8b467ba",
+    "codex-rs/utils/string/src/lib.rs": "358929e373322a22e936a980361d6216b36d6748723cf3a7513b156b10e022ec",
+    "codex-rs/utils/string/src/truncate.rs": "5e737c26ac9f3989fb3b699666fdc8ccef5af025127b462fc715150576f7c997"
+  },
+  "frontend": {
+    "implemented": [
+      "requires/ensures attributes, in either order, conjoined without discarding conditions",
+      "parameter names and result; scalar values and immutable string/slice lengths",
+      "string prefix/suffix predicates",
+      "payload-free matches! alternatives using reflected enum names",
+      "checked unit-returning lemmas; attributes erased in native builds"
+    ],
+    "semantics": "Rust-shaped syntax with mathematical integer arithmetic, not executable Rust arithmetic. Division and remainder currently require a positive literal divisor.",
+    "remaining": [
+      "Codex still uses cfg_attr wrappers outside cfg(flux) proof modules",
+      "generic and async signatures, method receivers and field projections",
+      "payload and guarded enum patterns, nested patterns and indexing definedness",
+      "constant-function reflection and dedicated inline proof-block syntax"
+    ],
+    "fail_closed": "Unsupported expressions produce macro errors. In particular, slice equality cannot be translated into length equality."
+  },
+  "accepted_checks": [
+    {
+      "function": "take_bytes_at_char_boundary",
+      "property": "The existing prefix, byte-budget and whole-input guarantees now use readable ensures attributes.",
+      "body_ms": 151.57
+    },
+    {
+      "function": "truncate::approx_token_count",
+      "property": "Exact (text.len()+3)/4 estimate and positivity for nonempty UTF-8 text.",
+      "body_ms": 36.06
+    },
+    {
+      "function": "truncate::budget_proofs::token_budget_is_monotone",
+      "property": "Existing byte-budget lemma now uses readable requires. It still depends on the previously checked saturating multiplication lemma.",
+      "body_ms": 22.88
+    },
+    {
+      "function": "truncate::budget_proofs::text_token_count_is_monotone",
+      "property": "New caller proof: increasing UTF-8 byte length cannot reduce the approximate token count.",
+      "body_ms": 24.27
+    },
+    {
+      "function": "rule::RuleMatch::decision",
+      "property": "Returns the same named Decision carried by the rule. Numeric enum tags were removed.",
+      "body_ms": 19.09
+    },
+    {
+      "function": "rule::resolution_proofs::{resolved_forbidden_rule_stays_forbidden,resolved_prompt_still_requires_approval}",
+      "property": "Forbidden and Prompt decisions survive executable resolution.",
+      "conditional": true,
+      "depends_on": "with_resolved_program contract; its panic obligation remains unproved."
+    },
+    {
+      "function": "image_proofs::patch_grid_product_fits_u64",
+      "property": "New checked ensures lemma: multiplying two u32 side counts fits in u64. Used next to image patch multiplication.",
+      "body_ms": 17.66
+    }
+  ],
+  "remaining_obligations": [
+    {
+      "function": "RuleMatch::with_resolved_program",
+      "status": "check_error",
+      "reason": "Missing panic model for AbsolutePathBuf::clone; generated inventory registration constructors also report missing panic models."
+    },
+    {
+      "function": "prompt_image_dimensions_fit",
+      "status": "check_error",
+      "reason": "The checked product lemma does not yet flow through u64::from without conversion models. div_ceil also lacks value/panic models; the exact patch-limit postcondition remains unproved.",
+      "body_ms": 36.89
+    },
+    {
+      "function": "prompt_image_output_dimensions_for_limits",
+      "status": "timeout",
+      "seconds": 180.009,
+      "reason": "The resize body did not finish in the bounded run. Its positive-limit preconditions also need to be discharged by callers; the public custom-limit input is not yet verified."
+    }
+  ],
+  "validation": {
+    "native_command": "just test -p codex-utils-string -p codex-utils-image -p codex-execpolicy",
+    "native_passed": 68,
+    "native_skipped": 0,
+    "native_note": "Subsequent Codex edits add cfg(flux)-only proofs; runtime implementations are unchanged.",
+    "format": "just fmt passed",
+    "flux_suite_passed": 1104,
+    "flux_suite_ignored": 7,
+    "frontend_unit_tests_passed": 10,
+    "native_erasure_tests_passed": 1,
+    "final_frontend_ui_tests_passed": 2,
+    "negative_cases": [
+      "bad precondition caller",
+      "false return postcondition",
+      "empty slice passed to nonempty precondition",
+      "false multiplication lemma",
+      "weakened enum denial",
+      "second stacked condition is false",
+      "reversed prefix relation"
+    ],
+    "scope": "Targeted bodies under loaded models; unselected function contracts are assumptions. Neither complete dependency closure nor whole-Codex coverage is established."
+  },
+  "evidence": {
+    "file": "readable-contracts-evidence.json.gz",
+    "sha256": "fc554e5cc664c95385d20a4cc515c8e2d27dfede5487369e42836ecbfcb2fd90"
+  },
+  "reproduce": "Use Flux at flux_commit with its built sysroot. Run tools/codex/corpus.py check on a prepared clone of this Codex branch using each archived report.json package/filter list and a new output directory. The first run includes the 180-second resize attempt; the final run isolates scalar/lemma obligations with a 60-second bound."
+}

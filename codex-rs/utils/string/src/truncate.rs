@@ -77,6 +77,8 @@ fn truncate_with_byte_estimate(s: &str, max_bytes: usize, use_tokens: bool) -> S
     assemble_truncated_output(left, right, &marker)
 }
 
+#[cfg_attr(flux, flux_core::ensures(result == (text.len() + 3) / 4))]
+#[cfg_attr(flux, flux_core::ensures(text.is_empty() || result > 0))]
 pub fn approx_token_count(text: &str) -> usize {
     let len = text.len();
     len.saturating_add(APPROX_BYTES_PER_TOKEN.saturating_sub(1)) / APPROX_BYTES_PER_TOKEN
@@ -98,8 +100,10 @@ pub const fn approx_bytes_for_tokens(tokens: usize) -> usize {
 
 #[cfg(flux)]
 mod budget_proofs {
+    use flux_core::requires;
+
     /// Increasing the token limit never decreases the available byte budget.
-    #[flux::sig(fn(smaller: usize, larger: usize) requires smaller <= larger)]
+    #[requires(smaller <= larger)]
     fn token_budget_is_monotone(smaller: usize, larger: usize) {
         let smaller_bytes = super::approx_bytes_for_tokens(smaller);
         let larger_bytes = super::approx_bytes_for_tokens(larger);
@@ -111,6 +115,14 @@ mod budget_proofs {
             larger_bytes,
         );
         assert!(smaller_bytes <= larger_bytes);
+    }
+
+    /// A longer UTF-8 payload cannot receive a smaller approximate token count.
+    #[requires(shorter.len() <= longer.len())]
+    fn text_token_count_is_monotone(shorter: &str, longer: &str) {
+        let shorter_tokens = super::approx_token_count(shorter);
+        let longer_tokens = super::approx_token_count(longer);
+        assert!(shorter_tokens <= longer_tokens);
     }
 }
 
