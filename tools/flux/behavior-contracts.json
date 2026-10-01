@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "verified_behavior": "push_visible_prefix appends exactly pending to the existing visible text, in that order, on normal return.",
+  "contract": "#[ensures(out.visible_text == concat(old(out.visible_text), pending))]",
+  "supporting_frame_condition": "The extraction count is preserved because drain_visible_to_suffix_match needs the count of already completed tags to survive this call.",
+  "standing_rule": "AGENTS.md: specify and document useful behavior; include unchanged state or absent behavior only for a concrete reason, and explain it.",
+  "removed_lemmas": [
+    "visible_prefix_preserves_extraction_count",
+    "repeated_empty_prefix_preserves_output"
+  ],
+  "regression_location": "Flux tests/tests/with_deps/pos/surface/readable_string_append.rs covers generic append composition.",
+  "base_commit": "8e34553c60d2969acf9e2bc1e9531d5efa8cc766",
+  "source_patch_sha256": "e83314525916e6d170e4bfde84cf94493ed7b5c74dee002401dcb53a7005e312",
+  "source_patch_scope": "Changes relative to base before adding this ledger and evidence archive.",
+  "flux_commit": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/23",
+  "model_change": "str::is_empty now relates empty content and zero byte length. The pinned Rust implementation tests len() == 0; UTF-8 byte length remains separate from SMT character length.",
+  "integration": {
+    "macro_dependency": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+    "cargo": "Only the two Flux macro package revisions changed.",
+    "bazel": "just bazel-lock-update and bazel mod deps --lockfile_mode=error passed."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1143,
+      "ignored": 7
+    },
+    "frontend_tests": 16,
+    "native_erasure_tests_per_mode": 5,
+    "native_parser_tests": {
+      "passed": 30,
+      "skipped": 0
+    },
+    "behavior_mutations": [
+      {
+        "name": "omit-text",
+        "old": "            out.visible_text.push_str(pending);",
+        "new": "            let _ = pending;",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "duplicate-text",
+        "old": "            out.visible_text.push_str(pending);",
+        "new": "            out.visible_text.push_str(pending);\n            out.visible_text.push_str(pending);",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "reverse-order",
+        "old": "concat(old(out.visible_text), pending)",
+        "new": "concat(pending, old(out.visible_text))",
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      }
+    ],
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 16,
+        "generated_bodies": 14
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 2.97,
+          "checker_ms": 275,
+          "body_ms": 262,
+          "solver_ms": 200,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.417,
+          "checker_ms": 99,
+          "body_ms": 44,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 1.768,
+          "checker_ms": 98,
+          "body_ms": 88,
+          "solver_ms": 62,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.467,
+          "checker_ms": 49,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 13.037,
+          "checker_ms": 124,
+          "body_ms": 73,
+          "solver_ms": 37,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.021,
+          "checker_ms": 86,
+          "body_ms": 36,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 26.375,
+          "checker_ms": 4040,
+          "body_ms": 3556,
+          "solver_ms": 3192,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 10.245,
+          "checker_ms": 4283,
+          "body_ms": 328,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 2.621,
+          "checker_ms": 1209,
+          "body_ms": 1102,
+          "solver_ms": 641,
+          "executed_solver_queries": 13,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.571,
+          "checker_ms": 1135,
+          "body_ms": 450,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 13
+        }
+      }
+    ],
+    "performance_note": "Cold means an empty proof-cache namespace. Cargo build caches remain populated; wall time includes compilation and checker setup. Cached runs execute no solver queries."
+  },
+  "remaining": [
+    "The whole Codex map remains incomplete; rechecked bodies are not a progress target by themselves.",
+    "The new optional payload syntax expresses the find_next_open index contract, but the existing iterator chain still fails to prove it. It is not yet applied as an assumed production contract in this Codex layer.",
+    "drain_visible_to_suffix_match still needs a contract for its actual visible-text transfer and retained suffix; its present conditions cover supporting state only.",
+    "push_str behavior, search selection, extraction correctness, and chunk-boundary independence remain open."
+  ],
+  "evidence": {
+    "path": "tools/flux/behavior-contracts-evidence.json.gz",
+    "sha256": "8c983bc90d43026fef6d46c473dcbea3a3601ab762a27bcc952e037ffdacf64f",
+    "bytes": 596416,
+    "files": 82
+  }
+}
