@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "implemented_change": "Flux retains valid iterator-input refinements when Map::next checks its callback. Mapped ranges now verify input preconditions, output index bounds, and those bounds across loops.",
+  "mechanism": "Trusted extern methods may refine inherited impl predicates using receiver state. Exact Rust predicate matching is preserved. Metadata records replaced parent indices; callers check the replacements and retain other inherited callback obligations. Range::step records start advancement and the shared end bound.",
+  "trust_boundary": "The Map and Range contracts are reviewed standard-library models. Client proofs are checked against those models; arbitrary summary inference and tuple-index inference are not implemented by this layer.",
+  "base_commit": "1c49c593977f75ffa42fba0bc5489a93810e6e8a",
+  "source_patch_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_patch_scope": "Codex source was clean at the base revision for both selected checks. The temporary parser candidate has its own patch hash and was restored before writing this ledger.",
+  "flux_commit": "27876856b8a5c18dda2fdc96e75cacea0eb2de37",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/25",
+  "integration": {
+    "macro_dependency": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+    "checker_and_models": "27876856b8a5c18dda2fdc96e75cacea0eb2de37",
+    "metadata_compatibility": "Rebuild pre-change Flux metadata. The verifier detected and rejected a stale flux-rs artifact during development; the final suite used rebuilt models."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1150,
+      "ignored": 7
+    },
+    "positive_cases": [
+      "range-dependent callback inputs and results",
+      "mapped loop index bounds",
+      "constant callback output",
+      "empty mapped range",
+      "two-callback extern method with one inherited bound refined"
+    ],
+    "negative_cases": [
+      "wrong callback result and precondition",
+      "false assertion in a mapped loop",
+      "wrong constant output",
+      "false Some result for an empty range",
+      "non-overridden callback output remains checked",
+      "local method cannot override inherited predicates through the extern mechanism"
+    ],
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 16,
+        "generated_bodies": 14
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 2.67,
+          "checker_ms": 251,
+          "body_ms": 238,
+          "solver_ms": 185,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.417,
+          "checker_ms": 108,
+          "body_ms": 49,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 1.517,
+          "checker_ms": 89,
+          "body_ms": 82,
+          "solver_ms": 61,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.417,
+          "checker_ms": 46,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 2.321,
+          "checker_ms": 126,
+          "body_ms": 75,
+          "solver_ms": 38,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.071,
+          "checker_ms": 86,
+          "body_ms": 35,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 9.998,
+          "checker_ms": 3973,
+          "body_ms": 3492,
+          "solver_ms": 3138,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 10.947,
+          "checker_ms": 4406,
+          "body_ms": 334,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 2.621,
+          "checker_ms": 1232,
+          "body_ms": 1126,
+          "solver_ms": 650,
+          "executed_solver_queries": 13,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.571,
+          "checker_ms": 1128,
+          "body_ms": 454,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 13
+        }
+      }
+    ],
+    "performance_note": "Uncached uses an empty proof-cache namespace with populated Cargo build caches. Cached selected checks execute zero solver queries. End-to-end times include compilation and setup; this single comparison makes no overall speedup claim."
+  },
+  "parser_candidate": {
+    "function": "inline_hidden_tag::InlineHiddenTagParser::<T>::find_next_open",
+    "contract": "#[ensures(result.is_none_or(|(_, index)| index < self.specs.len()))]",
+    "source_patch_sha256": "39a358c16493c1ff73f3bcb250c34bbbf25787f49067a66900e7245ad92bf005",
+    "status": "proof_failure",
+    "timed_out": false,
+    "source_restored": true,
+    "diagnostics": [
+      "The final map cannot establish the returned index bound.",
+      "Nested callbacks have unresolved no-panic obligations for str::find and Ordering::then_with."
+    ],
+    "wall_seconds": 1.668,
+    "next_work": "Carry enumerated tuple indices and callback result refinements through filter_map and min_by, then retry the same caller obligation. Resolve callback panic models without weakening the index requirement."
+  },
+  "evidence": {
+    "path": "tools/flux/iterator-callback-evidence.json.gz",
+    "sha256": "c3f5564084dc33cb0d3e8c01eb9063d38018a3e00fa30668ea4377a2a681645d",
+    "bytes": 481612,
+    "files": 64
+  }
+}
