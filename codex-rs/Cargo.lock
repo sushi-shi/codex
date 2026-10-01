@@ -3262,6 +3262,7 @@ dependencies = [
  "codex-websocket-client",
  "ctor 0.6.3",
  "dirs",
+ "flux-attrs",
  "futures",
  "http 1.4.0",
  "libc",
@@ -3616,6 +3617,7 @@ version = "0.0.0"
 dependencies = [
  "anyhow",
  "codex-protocol",
+ "flux-attrs",
  "pretty_assertions",
  "schemars 0.8.22",
  "serde",
@@ -4954,6 +4956,7 @@ dependencies = [
  "base64 0.22.1",
  "codex-utils-cache",
  "divan",
+ "flux-attrs",
  "image",
  "mime_guess",
  "thiserror 2.0.18",
@@ -5093,6 +5096,7 @@ dependencies = [
 name = "codex-utils-stream-parser"
 version = "0.0.0"
 dependencies = [
+ "flux-attrs",
  "pretty_assertions",
 ]
 
@@ -5100,6 +5104,7 @@ dependencies = [
 name = "codex-utils-string"
 version = "0.0.0"
 dependencies = [
+ "flux-attrs",
  "pretty_assertions",
  "regex-lite",
  "serde",
@@ -7050,6 +7055,24 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "spin",
+]
+
+[[package]]
+name = "flux-attrs"
+version = "0.1.0"
+source = "git+https://github.com/sushi-shi/flux.git?rev=4514241fb44edbb2ba7cb5cdca2b6ad3673a1234#4514241fb44edbb2ba7cb5cdca2b6ad3673a1234"
+dependencies = [
+ "flux-attrs-impl",
+]
+
+[[package]]
+name = "flux-attrs-impl"
+version = "0.1.0"
+source = "git+https://github.com/sushi-shi/flux.git?rev=4514241fb44edbb2ba7cb5cdca2b6ad3673a1234#4514241fb44edbb2ba7cb5cdca2b6ad3673a1234"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.117",
 ]
 
 [[package]]

@@ -8,6 +8,7 @@ license.workspace = true
 workspace = true
 
 [dependencies]
+flux-attrs = { workspace = true }
 base64 = { workspace = true }
 image = { workspace = true, features = ["jpeg", "png", "gif", "webp"] }
 codex-utils-cache = { workspace = true }

@@ -1,9 +1,6 @@
-#[cfg(flux)]
-use flux_core::ensures;
-#[cfg(flux)]
-use flux_core::may_panic;
-#[cfg(flux)]
-use flux_core::refined;
+use flux_attrs::ensures;
+use flux_attrs::may_panic;
+use flux_attrs::refined;
 
 use crate::StreamTextChunk;
 use crate::StreamTextParser;
@@ -40,7 +37,7 @@ struct ActiveTag<T> {
 /// Matching is literal and non-nested. If EOF is reached while a tag is still open, the parser
 /// auto-closes it and returns the buffered content as extracted data.
 #[derive(Debug)]
-#[cfg_attr(flux, refined(pending, active))]
+#[refined(pending, active)]
 pub struct InlineHiddenTagParser<T>
 where
     T: Clone + Eq,
@@ -55,9 +52,9 @@ where
     T: Clone + Eq,
 {
     /// Create a parser for one or more hidden inline tags.
-    #[cfg_attr(flux, may_panic)]
-    #[cfg_attr(flux, ensures(result.pending == ""))]
-    #[cfg_attr(flux, ensures(result.active.is_none()))]
+    #[may_panic]
+    #[ensures(result.pending == "")]
+    #[ensures(result.active.is_none())]
     pub fn new(specs: Vec<InlineTagSpec<T>>) -> Self {
         assert!(
             !specs.is_empty(),
@@ -184,11 +181,11 @@ where
         out
     }
 
-    #[cfg_attr(flux, may_panic)]
-    #[cfg_attr(flux, ensures(self.pending == ""))]
-    #[cfg_attr(flux, ensures(self.active.is_none()))]
-    #[cfg_attr(flux, ensures(result.extracted.len() == if old(self.active.is_some()) { 1 } else { 0 }))]
-    #[cfg_attr(flux, ensures(result.visible_text == if old(self.active.is_some()) { "" } else { old(self.pending) }))]
+    #[may_panic]
+    #[ensures(self.pending == "")]
+    #[ensures(self.active.is_none())]
+    #[ensures(result.extracted.len() == if old(self.active.is_some()) { 1 } else { 0 })]
+    #[ensures(result.visible_text == if old(self.active.is_some()) { "" } else { old(self.pending) })]
     fn finish(&mut self) -> StreamTextChunk<Self::Extracted> {
         let mut out = StreamTextChunk::default();
 
@@ -213,9 +210,9 @@ where
     }
 }
 
-#[cfg_attr(flux, ensures(result <= s.len()))]
-#[cfg_attr(flux, ensures(needle.is_empty() || result < needle.len()))]
-#[cfg_attr(flux, ensures(needle.is_char_boundary(result)))]
+#[ensures(result <= s.len())]
+#[ensures(needle.is_empty() || result < needle.len())]
+#[ensures(needle.is_char_boundary(result))]
 fn longest_suffix_prefix_len(s: &str, needle: &str) -> usize {
     let max = s.len().min(needle.len().saturating_sub(1));
     for k in (1..=max).rev() {
@@ -230,8 +227,8 @@ fn longest_suffix_prefix_len(s: &str, needle: &str) -> usize {
 mod state_proofs {
     use super::InlineHiddenTagParser;
     use crate::StreamTextParser;
-    use flux_core::ensures;
-    use flux_core::may_panic;
+    use flux_attrs::ensures;
+    use flux_attrs::may_panic;
 
     /// A successful finish resets both pieces of buffering state.
     #[may_panic]

@@ -5,6 +5,7 @@
 
 use std::collections::VecDeque;
 
+use flux_attrs::ensures;
 use schemars::JsonSchema;
 use serde::Deserialize;
 use serde::Serialize;
@@ -205,10 +206,10 @@ impl RetainedContextEvent {
 
 impl RetainedContext {
     /// Reserves order without retaining pending input that hooks may reject or cancel.
-    #[cfg_attr(flux, flux_core::ensures(result == old(self.next_order)))]
-    #[cfg_attr(flux, flux_core::ensures(self.next_order == if old(self.next_order) < u64::MAX {
+    #[ensures(result == old(self.next_order))]
+    #[ensures(self.next_order == if old(self.next_order) < u64::MAX {
         old(self.next_order) + 1
-    } else { u64::MAX }))]
+    } else { u64::MAX })]
     pub fn reserve_order(&mut self) -> u64 {
         let order = self.next_order;
         self.next_order = self.next_order.saturating_add(1);
@@ -464,11 +465,12 @@ impl RetainedContext {
 #[cfg(flux)]
 mod order_proofs {
     use super::RetainedContext;
-    use flux_core::requires;
+    use flux_attrs::ensures;
+    use flux_attrs::requires;
 
     /// Reservations are strictly ordered while both counter increments fit.
     #[requires(context.next_order <= u64::MAX - 2)]
-    #[flux_core::ensures(context.next_order == old(context.next_order) + 2)]
+    #[ensures(context.next_order == old(context.next_order) + 2)]
     fn consecutive_reservations(context: &mut RetainedContext) {
         let first = context.reserve_order();
         let second = context.reserve_order();

@@ -16,6 +16,7 @@ ignored-paths = ["tests/unit/client_provisioning_tests.rs"]
 workspace = true
 
 [dependencies]
+flux-attrs = { workspace = true }
 arc-swap = { workspace = true }
 axum = { workspace = true, features = ["http1", "tokio", "ws"] }
 base64 = { workspace = true }

@@ -7,6 +7,9 @@ license.workspace = true
 [lints]
 workspace = true
 
+[dependencies]
+flux-attrs = { workspace = true }
+
 [dev-dependencies]
 pretty_assertions = { workspace = true }
 

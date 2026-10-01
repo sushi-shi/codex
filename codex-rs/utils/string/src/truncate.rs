@@ -10,6 +10,8 @@
     }
 })]
 
+use flux_attrs::ensures;
+
 const APPROX_BYTES_PER_TOKEN: usize = 4;
 
 /// Truncate a string to `max_bytes` using a character-count marker.
@@ -77,8 +79,8 @@ fn truncate_with_byte_estimate(s: &str, max_bytes: usize, use_tokens: bool) -> S
     assemble_truncated_output(left, right, &marker)
 }
 
-#[cfg_attr(flux, flux_core::ensures(result == (text.len() + 3) / 4))]
-#[cfg_attr(flux, flux_core::ensures(text.is_empty() || result > 0))]
+#[ensures(result == (text.len() + 3) / 4)]
+#[ensures(text.is_empty() || result > 0)]
 pub fn approx_token_count(text: &str) -> usize {
     let len = text.len();
     len.saturating_add(APPROX_BYTES_PER_TOKEN.saturating_sub(1)) / APPROX_BYTES_PER_TOKEN
@@ -100,7 +102,7 @@ pub const fn approx_bytes_for_tokens(tokens: usize) -> usize {
 
 #[cfg(flux)]
 mod budget_proofs {
-    use flux_core::requires;
+    use flux_attrs::requires;
 
     /// Increasing the token limit never decreases the available byte budget.
     #[requires(smaller <= larger)]
