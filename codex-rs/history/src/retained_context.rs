@@ -137,6 +137,7 @@ pub enum RetainedContextEvent {
 /// Bounded snapshot of retained families, persisted with the parent compaction checkpoint.
 /// Facts live until their instruction boundary is rolled back; compaction does not expire them.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[cfg_attr(flux, flux::refined_by(next_order: int))]
 pub struct RetainedContext {
     verified_answers: VecDeque<Ordered<VerifiedAnswer>>,
     /// Lost evidence cannot be treated as a complete authorization history.
@@ -148,6 +149,7 @@ pub struct RetainedContext {
     #[serde(default = "legacy_user_messages_incomplete")]
     user_messages_incomplete: bool,
     #[serde(default)]
+    #[cfg_attr(flux, flux::field(u64[next_order]))]
     next_order: u64,
 }
 
@@ -203,6 +205,10 @@ impl RetainedContextEvent {
 
 impl RetainedContext {
     /// Reserves order without retaining pending input that hooks may reject or cancel.
+    #[cfg_attr(flux, flux_core::ensures(result == old(self.next_order)))]
+    #[cfg_attr(flux, flux_core::ensures(self.next_order == if old(self.next_order) < u64::MAX {
+        old(self.next_order) + 1
+    } else { u64::MAX }))]
     pub fn reserve_order(&mut self) -> u64 {
         let order = self.next_order;
         self.next_order = self.next_order.saturating_add(1);
@@ -452,6 +458,21 @@ impl RetainedContext {
             (source != RetainedInputSource::Inherited || message.inherited)
                 && !turn_ids.contains(&message.value.turn_id.as_str())
         });
+    }
+}
+
+#[cfg(flux)]
+mod order_proofs {
+    use super::RetainedContext;
+    use flux_core::requires;
+
+    /// Reservations are strictly ordered while both counter increments fit.
+    #[requires(context.next_order <= u64::MAX - 2)]
+    #[flux_core::ensures(context.next_order == old(context.next_order) + 2)]
+    fn consecutive_reservations(context: &mut RetainedContext) {
+        let first = context.reserve_order();
+        let second = context.reserve_order();
+        assert!(first < second);
     }
 }
 

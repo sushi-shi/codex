@@ -386,3 +386,20 @@ fn adopted_instructions_preserve_local_order_and_rollback_scope() {
     expected.user_messages.pop_back();
     assert_eq!(restored, expected);
 }
+
+#[test]
+fn order_reservation_saturates_without_reordering_retained_facts() {
+    for initial in [0, 1, u64::MAX - 2, u64::MAX - 1, u64::MAX] {
+        let mut context = RetainedContext {
+            next_order: initial,
+            ..Default::default()
+        };
+        let mut expected = context.clone();
+        for step in 0..3_u64 {
+            let reserved = context.reserve_order();
+            assert_eq!(reserved, initial.saturating_add(step));
+            expected.next_order = initial.saturating_add(step + 1);
+            assert_eq!(context, expected);
+        }
+    }
+}

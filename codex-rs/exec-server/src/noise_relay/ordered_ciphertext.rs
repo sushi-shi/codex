@@ -8,9 +8,13 @@ const MAX_PENDING_BYTES: usize = 1024 * 1024;
 /// Reorders relay records before they reach Noise's implicit receive nonce.
 /// The window is bounded, and each sequence number is released at most once.
 #[derive(Default)]
+#[cfg_attr(flux, flux::refined_by(next_seq: int, pending_bytes: int))]
+#[cfg_attr(flux, flux::invariant(pending_bytes <= MAX_PENDING_BYTES))]
 pub(crate) struct OrderedCiphertextFrames {
+    #[cfg_attr(flux, flux::field(u32[next_seq]))]
     next_seq: u32,
     pending: BTreeMap<u32, Vec<u8>>,
+    #[cfg_attr(flux, flux::field(usize[pending_bytes]))]
     pending_bytes: usize,
 }
 
@@ -19,6 +23,7 @@ impl OrderedCiphertextFrames {
     ///
     /// Returns nothing for duplicates or while a gap remains. Closing a gap also
     /// releases any buffered records that now follow it contiguously.
+    #[cfg_attr(flux, flux_core::ensures(self.next_seq >= old(self.next_seq)))]
     pub(crate) fn push(
         &mut self,
         seq: u32,
@@ -57,11 +62,32 @@ impl OrderedCiphertextFrames {
         Ok(ready)
     }
 
+    #[cfg_attr(flux, flux_core::ensures(result.is_ok() == (old(self.next_seq) < u32::MAX)))]
+    #[cfg_attr(flux, flux_core::ensures(self.next_seq == if result.is_ok() {
+        old(self.next_seq) + 1
+    } else { old(self.next_seq) }))]
+    #[cfg_attr(flux, flux_core::ensures(self.pending_bytes == old(self.pending_bytes)))]
     fn advance(&mut self) -> Result<(), ExecServerError> {
         self.next_seq = self.next_seq.checked_add(1).ok_or_else(|| {
             ExecServerError::Protocol("Noise relay sequence number exhausted".to_string())
         })?;
         Ok(())
+    }
+}
+
+#[cfg(flux)]
+mod sequence_proofs {
+    use super::OrderedCiphertextFrames;
+    use flux_core::requires;
+
+    /// The last successful advance cannot be followed by a wrapped sequence.
+    #[requires(frames.next_seq == u32::MAX - 1)]
+    #[flux_core::ensures(frames.next_seq == u32::MAX)]
+    #[flux_core::ensures(frames.pending_bytes == old(frames.pending_bytes))]
+    fn exhaustion_preserves_sequence(frames: &mut OrderedCiphertextFrames) {
+        assert!(frames.advance().is_ok());
+        assert!(frames.advance().is_err());
+        assert!(frames.next_seq == u32::MAX);
     }
 }
 
