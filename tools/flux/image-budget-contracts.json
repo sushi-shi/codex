@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "base_commit": "dcba86abdab3c4edd272f2e5eca94e490ee105a8",
+  "flux_commit": "2edb9df1a708ebe3f78fa7569bd01248235e1466",
+  "updates": "Closes the prompt_image_dimensions_fit blocker in readable-contracts.json; the floating-point resize proof remains open.",
+  "contracts": [
+    {
+      "function": "prompt_image_dimensions_fit",
+      "status": "accepted_with_observed_models",
+      "property": "Exact equivalence between acceptance and dimension/ceiling-patch limits. Contract now uses readable result and limits.max_dimension/max_patches field expressions."
+    },
+    {
+      "function": "image_proofs::patch_grid_product_fits_u64",
+      "status": "accepted_with_observed_models",
+      "property": "The product of u32 side counts fits in u64; the fact now propagates through lossless widening."
+    },
+    {
+      "function": "image_proofs::increasing_limits_preserves_admission",
+      "status": "accepted_with_observed_models",
+      "property": "New readable requires and inline assertion establish that increasing either cap cannot reject already admitted dimensions; both calls use the checked predicate contract."
+    }
+  ],
+  "new_models": {
+    "unsigned_div_ceil": "Exact (num + rhs - 1) / rhs in mathematical integers, with rhs > 0 required. All unsigned widths.",
+    "unsigned_From": "Exact value preservation for the portable lossless unsigned From implementations. No narrowing, floating-point, or lossy cast assumptions added.",
+    "trust": "External models are assumptions, audited against pinned Rust source and native boundary/property tests. Model tests can falsify claims but are not a formal proof of Rust internals."
+  },
+  "readability": "Named-field expressions lower to refinement-record projections; PromptImageResizeLimits refinements now use and bind the actual Rust field names.",
+  "validation": {
+    "flux_regression_passed": 1106,
+    "flux_regression_ignored": 7,
+    "arithmetic_native_tests_passed": 3,
+    "arithmetic_cases": "65,280 exhaustive u8 ceiling pairs, u64/u128 boundary cases, 65,536 u16 widening cases and 49 patch products.",
+    "frontend_unit_tests_passed": 10,
+    "native_erasure_tests_passed": 1,
+    "frontend_field_ui_tests_passed": 2,
+    "codex_command": "just test -p codex-utils-image",
+    "codex_tests_passed": 14,
+    "resize_boundary_cases_passed": 7098,
+    "oracle": "The new Codex test calls the real resize routine and checks resulting dimensions using independent u128 integer patch arithmetic; no image allocation required.",
+    "format": "just fmt passed",
+    "mutation": "Replacing width.div_ceil(32) with width/32 fails the readable predicate postcondition. Original source restored byte-for-byte: its git-diff SHA256 equals the final positive run.",
+    "source_patch_sha256": "41c40187f46a70f1e6e074651b55ca521969a15782c460add4e3a06ac1744034",
+    "performance": [
+      {
+        "timings": "codex_utils_image-timings.json",
+        "checker_ms": 86,
+        "body_ms": 82,
+        "solver_ms": 62,
+        "executed_solver_queries": 3,
+        "cached_bodies": 0
+      }
+    ],
+    "scope": "Only the admission predicate and two local proofs are selected. Other bodies and external library models remain assumptions. Host/default-feature configuration only."
+  },
+  "remaining": [
+    "The full floating-point resize body previously timed out after 180 seconds and has not been proved.",
+    "Positive custom-limit preconditions remain to be established by public callers.",
+    "Other Codex contracts and the full readable frontend remain incremental work."
+  ],
+  "evidence": {
+    "file": "image-budget-evidence.json.gz",
+    "sha256": "cf18b6e9906aed4df4c888b486b2720d0f074d3165de6e687ba79b5e997290fa"
+  },
+  "reproduce": "Build Flux at flux_commit; run tools/codex/corpus.py check on a prepared clone of this branch with --package codex-utils-image --only-check def:prompt_image_dimensions_fit --only-check def:image_proofs:: --timeout 60 --offline and a fresh --output directory."
+}
