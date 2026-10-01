@@ -1,6 +1,15 @@
 //! Utilities for truncating large chunks of output while preserving a prefix
 //! and suffix on UTF-8 boundaries.
 
+#![cfg_attr(flux, flux::defs {
+    local qualifier Utf8Boundary(offset: int, text: str) {
+        flux_core::str::boundary(text, offset)
+    }
+    local qualifier SuffixBudget(start: int, text: str, budget: int) {
+        flux_core::str::byte_len(text) - start <= budget
+    }
+})]
+
 const APPROX_BYTES_PER_TOKEN: usize = 4;
 
 /// Truncate a string to `max_bytes` using a character-count marker.
@@ -111,6 +120,21 @@ pub fn approx_tokens_from_byte_count(bytes: usize) -> u64 {
         / (APPROX_BYTES_PER_TOKEN as u64)
 }
 
+/// Keep a prefix and suffix within their byte budgets, rounding inward to UTF-8
+/// boundaries. The prefix wins when budgets overlap. Count removed Unicode
+/// scalar values (not bytes or grapheme clusters); retained slices never overlap.
+// These candidate loop invariants are checked by Flux and apply only here.
+#[cfg_attr(flux, flux::qualifiers(Utf8Boundary, SuffixBudget))]
+#[cfg_attr(
+    flux,
+    flux::sig(fn(s: &str[@text], beginning_bytes: usize, end_bytes: usize) ->
+        (usize, &str[#prefix], &str{suffix:
+            flux_core::str::byte_len(prefix) <= beginning_bytes
+            && flux_core::str::byte_len(suffix) <= end_bytes
+            && flux_core::str::byte_len(prefix) + flux_core::str::byte_len(suffix)
+                <= flux_core::str::byte_len(text)
+            && str_prefix_of(prefix, text) && str_suffix_of(suffix, text)}))
+)]
 fn split_string(s: &str, beginning_bytes: usize, end_bytes: usize) -> (usize, &str, &str) {
     if s.is_empty() {
         return (0, "", "");
