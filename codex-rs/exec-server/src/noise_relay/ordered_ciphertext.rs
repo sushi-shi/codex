@@ -8,13 +8,12 @@ const MAX_PENDING_BYTES: usize = 1024 * 1024;
 /// Reorders relay records before they reach Noise's implicit receive nonce.
 /// The window is bounded, and each sequence number is released at most once.
 #[derive(Default)]
-#[cfg_attr(flux, flux::refined_by(next_seq: int, pending_bytes: int))]
+#[cfg_attr(flux, flux_core::refined)]
 #[cfg_attr(flux, flux::invariant(pending_bytes <= MAX_PENDING_BYTES))]
+#[cfg_attr(flux, flux::invariant(pending_bytes == pending.total))]
 pub(crate) struct OrderedCiphertextFrames {
-    #[cfg_attr(flux, flux::field(u32[next_seq]))]
     next_seq: u32,
     pending: BTreeMap<u32, Vec<u8>>,
-    #[cfg_attr(flux, flux::field(usize[pending_bytes]))]
     pending_bytes: usize,
 }
 
@@ -24,6 +23,11 @@ impl OrderedCiphertextFrames {
     /// Returns nothing for duplicates or while a gap remains. Closing a gap also
     /// releases any buffered records that now follow it contiguously.
     #[cfg_attr(flux, flux_core::ensures(self.next_seq >= old(self.next_seq)))]
+    #[cfg_attr(flux, flux_core::ensures(if seq < old(self.next_seq) {
+        result.is_ok() && self.next_seq == old(self.next_seq)
+            && self.pending_bytes == old(self.pending_bytes)
+            && self.pending == old(self.pending)
+    } else { true }))]
     pub(crate) fn push(
         &mut self,
         seq: u32,
@@ -67,6 +71,7 @@ impl OrderedCiphertextFrames {
         old(self.next_seq) + 1
     } else { old(self.next_seq) }))]
     #[cfg_attr(flux, flux_core::ensures(self.pending_bytes == old(self.pending_bytes)))]
+    #[cfg_attr(flux, flux_core::ensures(self.pending == old(self.pending)))]
     fn advance(&mut self) -> Result<(), ExecServerError> {
         self.next_seq = self.next_seq.checked_add(1).ok_or_else(|| {
             ExecServerError::Protocol("Noise relay sequence number exhausted".to_string())
@@ -88,6 +93,20 @@ mod sequence_proofs {
         assert!(frames.advance().is_ok());
         assert!(frames.advance().is_err());
         assert!(frames.next_seq == u32::MAX);
+    }
+
+    /// Replayed records leave sequence and buffer accounting unchanged.
+    /// The map model tracks keys and payload lengths, not ciphertext contents.
+    #[requires(seq < frames.next_seq)]
+    #[flux_core::ensures(frames.next_seq == old(frames.next_seq))]
+    #[flux_core::ensures(frames.pending_bytes == old(frames.pending_bytes))]
+    #[flux_core::ensures(frames.pending == old(frames.pending))]
+    fn stale_frame_preserves_accounting(
+        frames: &mut OrderedCiphertextFrames,
+        seq: u32,
+        payload: Vec<u8>,
+    ) {
+        assert!(frames.push(seq, payload).is_ok());
     }
 }
 

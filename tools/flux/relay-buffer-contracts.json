@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "updates": "Closes the relay push accounting and allocation-model blockers recorded in state-contracts.json. Broader verification remains incomplete.",
+  "base_commit": "f6da653a3fe44170b598191dfa6ccaba1f00f161",
+  "source_patch_sha256": "3bf1eec2df225bc5cd376bb814e5f402f29a811a37ad31e54529ea95d81205a3",
+  "flux_commit": "d3eabcb4a021aba3533c0314bfda76ee1bba8643",
+  "contracts": [
+    {
+      "def_path": "<noise_relay::ordered_ciphertext::OrderedCiphertextFrames as std::default::Default>::default",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": false,
+      "generated": true
+    },
+    {
+      "def_path": "noise_relay::ordered_ciphertext::OrderedCiphertextFrames::push",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "noise_relay::ordered_ciphertext::OrderedCiphertextFrames::advance",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "noise_relay::ordered_ciphertext::sequence_proofs::exhaustion_preserves_sequence",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    },
+    {
+      "def_path": "noise_relay::ordered_ciphertext::sequence_proofs::stale_frame_preserves_accounting",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false
+    }
+  ],
+  "properties": [
+    "At method boundaries, pending_bytes equals the sum of modeled payload lengths in pending and is at most MAX_PENDING_BYTES.",
+    "push preserves monotonic sequence advancement and has no proved panic or overflow obligation left under the audited models.",
+    "Already released sequence numbers return Ok and preserve the sequence, byte counter, and map model.",
+    "advance increments exactly once before exhaustion, fails at u32::MAX, and preserves the map model and byte counter.",
+    "Checked exhaustion and stale-frame lemmas call the real methods. Derived Default establishes the type invariants."
+  ],
+  "readability": "#[refined] infers named struct indices and field connections; requires/ensures use Rust names, old(expr), if/else, and Result discriminants. cfg_attr wrappers remain until ordinary-build dependency integration. Map model equality is not complete ciphertext equality.",
+  "model_trust": "Audited external library assumptions at Rust 8925ea358a0f: integer key and identity Borrow semantics; Vec length weights; Global-only collection allocation/cloning; allocation byte bounds including ZST exceptions and capacity doubling. See the Flux handoff/COLLECTION-MODELS.md audit. Allocation aborts remain possible.",
+  "validation": {
+    "flux_regression": {
+      "command": "cargo x test",
+      "passed": 1120,
+      "ignored": 7
+    },
+    "frontend_unit_tests_passed": 14,
+    "native_erasure_tests_passed": 2,
+    "native_model_tests_passed": 5,
+    "runner_tests_passed": 23,
+    "native_model_operations": 20000,
+    "codex_native": {
+      "command": "just test -p codex-exec-server --lib -E \"test(noise_relay::ordered_ciphertext::tests::)\"",
+      "passed": 6,
+      "skipped_by_selection": 320
+    },
+    "native_scope": "Focused relay tests passed. The previously recorded broader native suites have environment failures; no claim of a green whole-project test suite.",
+    "mutations": [
+      "Setting the charged counter to zero rejected.",
+      "Failing to subtract released bytes rejected.",
+      "Removing the byte cap rejected.",
+      "Removing the duplicate-key guard rejected."
+    ],
+    "restoration": "Every mutant restored byte-for-byte and matched the positive source patch hash.",
+    "classification_fix": "The first failed invariant was mislabeled build_or_checker_failure. The diagnostic and coverage record showed a proof failure; the runner now recognizes type invariant may not hold, with a regression test. Original evidence is preserved.",
+    "performance": {
+      "uncached": [
+        {
+          "timings": "codex_exec_server-timings.json",
+          "checker_ms": 3696,
+          "body_ms": 3314,
+          "solver_ms": 2955,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        }
+      ],
+      "cached": [
+        {
+          "timings": "codex_exec_server-timings.json",
+          "checker_ms": 6300,
+          "body_ms": 721,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      ]
+    },
+    "elapsed_seconds": {
+      "uncached": 9.799,
+      "cached": 12.479
+    },
+    "performance_scope": "Single observations on a shared host. Four cached body results eliminate new solver queries, but overall cached elapsed time was not faster; analysis and build overhead remain. The unchanged caller lemma does not prove a mutated callee.",
+    "format": "cargo fmt --all and just fmt passed"
+  },
+  "remaining": [
+    "Prove returned ciphertext contents, full nonce ordering, and the exact reorder-window cardinality.",
+    "Propagate the invariants and contracts through all relay callers and dependency bodies.",
+    "Generalize readable models, named predicates, generic/async contracts and proof syntax as actual Codex code requires.",
+    "Whole Codex, previously recorded image/parser/async obligations, and other platform/feature configurations remain incomplete.",
+    "An abandoned output-only predicate-weight prototype triggers an unresolved fixpoint-encoding crash; the shipped type-defined measure avoids that unsupported path."
+  ],
+  "scope": "Five selected relay bodies in host/default-feature library configuration. Unselected bodies and dependencies remain assumed. This is acceptance with observed models, not whole-program verification.",
+  "evidence": {
+    "file": "relay-buffer-evidence.json.gz",
+    "sha256": "1849b80d86b180bdaa03622f4f79dbefb87b32f1dc957422d711d546cb7823df"
+  },
+  "reproduce": "Build the recorded Flux commit, then run tools/codex/corpus.py check --source <prepared-codex> --flux <flux> --package codex-exec-server --only-check def:ordered_ciphertext:: --timeout 120 --offline --proof-cache <cache> --output <fresh-directory>."
+}
