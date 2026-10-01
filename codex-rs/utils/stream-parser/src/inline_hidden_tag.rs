@@ -224,6 +224,8 @@ where
 #[ensures(result <= s.len())]
 #[ensures(needle.is_empty() || result < needle.len())]
 #[ensures(needle.is_char_boundary(result))]
+// Streaming callers split the haystack at this retained suffix's start.
+#[ensures(s.is_char_boundary(s.len() - result))]
 fn longest_suffix_prefix_len(s: &str, needle: &str) -> usize {
     let max = s.len().min(needle.len().saturating_sub(1));
     for k in (1..=max).rev() {

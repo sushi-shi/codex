@@ -1,0 +1,246 @@
+{
+  "schema_version": 1,
+  "implemented_change": "Verify that the retained suffix begins at a UTF-8 boundary in the input; enforce String slice and prefix-drain requirements when checking the streaming caller.",
+  "contract": "#[ensures(s.is_char_boundary(s.len() - result))]",
+  "base_commit": "b415728347935481ff7a2459abe0fbd100a3d6ee",
+  "source_patch_sha256": "c3a798a01148d0fdb791475c64bd2390d0e7687047a63cf9db6ed703393b9ddf",
+  "flux_commit": "ef5241b9501554f1f4d95a676bdb0e3d4495f898",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/30",
+  "macro_commit": "d2b7ea21d4177217e10e93ebff162bbec9da9f19",
+  "mechanism": {
+    "reference_values": "Shared references retain the referent value at generic boundaries. Reference and referent indices are linked before predicate instantiation, preserving inference scopes.",
+    "search": "Literal find returns both start and end boundaries. A matching literal suffix starts at a boundary in the haystack.",
+    "indexing": "String delegates boundary and result requirements to the existing sealed SliceIndex<str> models.",
+    "draining": "Prefix drains require a byte boundary; the owner may retain its original contents if the iterator is forgotten, or contain the remaining suffix after Drop.",
+    "trusted_basis": "Pinned Rust 8925ea358a0f265ca61026aadc7ecc506c545cbe; extern specifications remain trusted standard-library models."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1174,
+      "ignored": 7
+    },
+    "native_parser_tests": 30,
+    "native_model_audit_checks": 96,
+    "suffix_proof": {
+      "status": "checked_with_observed_models",
+      "summaries": [
+        {
+          "processed": 115,
+          "checked": 1,
+          "trusted": 114,
+          "ignored": 0
+        }
+      ],
+      "scope_note": "Summaries are compiler invocations, not unique functions or a proof of all behavior",
+      "package": "codex-utils-stream-parser",
+      "command": [
+        "/tmp/flux-implementation/target/debug/cargo-flux",
+        "flux",
+        "check",
+        "-p",
+        "codex-utils-stream-parser",
+        "--lib",
+        "--locked",
+        "--Fcache=/tmp/flux-codex-results/parser-slices-final-proof-cache/1416d549f3932b26992674c5dcbaf19b0b7b7dbe830cedd29861c5005e446dcf/codex-utils-stream-parser.json",
+        "--Fstd-extern-specs=true",
+        "--Fcheck-overflow=strict",
+        "--Fno-panic=true",
+        "--Ftimings=true",
+        "--Fsummary=true",
+        "--Fcoverage=true",
+        "--Flog-dir=/tmp/flux-codex-results/parser-slices-suffix/codex-utils-stream-parser",
+        "--offline"
+      ],
+      "returncode": 0,
+      "timed_out": false,
+      "elapsed_seconds": 3.878,
+      "diagnostics": "codex-utils-stream-parser/output.log",
+      "specification_status": "needs_review",
+      "function_map": "codex-utils-stream-parser/function-map.json",
+      "mapping_status": "complete_observations",
+      "dependency_proofs": "not_collected",
+      "temporary_flux_metadata": "\n[package.metadata.flux]\nenabled = true\ninclude = [\"def:longest_suffix_prefix_len\"]\n",
+      "cache_existed_before_run": false,
+      "performance": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 227,
+          "body_ms": 210,
+          "solver_ms": 137,
+          "executed_solver_queries": 1,
+          "cached_bodies": 0
+        }
+      ],
+      "build_lock_wait_observed": true
+    },
+    "suffix_cached_proof": {
+      "status": "checked_with_observed_models",
+      "summaries": [
+        {
+          "processed": 115,
+          "checked": 1,
+          "trusted": 114,
+          "ignored": 0
+        }
+      ],
+      "scope_note": "Summaries are compiler invocations, not unique functions or a proof of all behavior",
+      "package": "codex-utils-stream-parser",
+      "command": [
+        "/tmp/flux-implementation/target/debug/cargo-flux",
+        "flux",
+        "check",
+        "-p",
+        "codex-utils-stream-parser",
+        "--lib",
+        "--locked",
+        "--Fcache=/tmp/flux-codex-results/parser-slices-final-proof-cache/1416d549f3932b26992674c5dcbaf19b0b7b7dbe830cedd29861c5005e446dcf/codex-utils-stream-parser.json",
+        "--Fstd-extern-specs=true",
+        "--Fcheck-overflow=strict",
+        "--Fno-panic=true",
+        "--Ftimings=true",
+        "--Fsummary=true",
+        "--Fcoverage=true",
+        "--Flog-dir=/tmp/flux-codex-results/parser-slices-suffix-cached/codex-utils-stream-parser",
+        "--offline"
+      ],
+      "returncode": 0,
+      "timed_out": false,
+      "elapsed_seconds": 2.37,
+      "diagnostics": "codex-utils-stream-parser/output.log",
+      "specification_status": "needs_review",
+      "function_map": "codex-utils-stream-parser/function-map.json",
+      "mapping_status": "complete_observations",
+      "dependency_proofs": "not_collected",
+      "temporary_flux_metadata": "\n[package.metadata.flux]\nenabled = true\ninclude = [\"def:longest_suffix_prefix_len\"]\n",
+      "cache_existed_before_run": true,
+      "performance": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 57,
+          "body_ms": 49,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 1
+        }
+      ],
+      "build_lock_wait_observed": true
+    },
+    "negative_mutation": {
+      "change": "Remove s.ends_with(&needle[..k]) from the loop guard.",
+      "status": "proof_failure",
+      "source_restored": true,
+      "elapsed_seconds": 16.351
+    },
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "status": "checked_with_observed_models",
+        "elapsed_seconds": 3.171,
+        "statuses": {
+          "accepted_with_observed_models": 4
+        },
+        "performance": [
+          {
+            "timings": "codex_utils_string-timings.json",
+            "checker_ms": 351,
+            "body_ms": 340,
+            "solver_ms": 263,
+            "executed_solver_queries": 4,
+            "cached_bodies": 0
+          }
+        ]
+      },
+      {
+        "package": "codex-utils-image",
+        "status": "checked_with_observed_models",
+        "elapsed_seconds": 2.37,
+        "statuses": {
+          "accepted_with_observed_models": 3
+        },
+        "performance": [
+          {
+            "timings": "codex_utils_image-timings.json",
+            "checker_ms": 146,
+            "body_ms": 138,
+            "solver_ms": 90,
+            "executed_solver_queries": 3,
+            "cached_bodies": 0
+          }
+        ]
+      },
+      {
+        "package": "codex-history",
+        "status": "checked_with_observed_models",
+        "elapsed_seconds": 8.384,
+        "statuses": {
+          "accepted_with_observed_models": 2
+        },
+        "performance": [
+          {
+            "timings": "codex_history-timings.json",
+            "checker_ms": 152,
+            "body_ms": 88,
+            "solver_ms": 41,
+            "executed_solver_queries": 2,
+            "cached_bodies": 0
+          }
+        ]
+      },
+      {
+        "package": "codex-exec-server",
+        "status": "checked_with_observed_models",
+        "elapsed_seconds": 17.25,
+        "statuses": {
+          "enclosing_body_obligation": 140,
+          "accepted_with_observed_models": 5
+        },
+        "performance": [
+          {
+            "timings": "codex_exec_server-timings.json",
+            "checker_ms": 5309,
+            "body_ms": 4945,
+            "solver_ms": 4318,
+            "executed_solver_queries": 4,
+            "cached_bodies": 0
+          }
+        ]
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "status": "proof_failure",
+        "elapsed_seconds": 139.79,
+        "statuses": {
+          "accepted_with_observed_models": 32,
+          "enclosing_body_obligation": 12,
+          "check_error": 2
+        },
+        "performance": [
+          {
+            "timings": "codex_utils_stream_parser-timings.json",
+            "checker_ms": 137201,
+            "body_ms": 132358,
+            "solver_ms": 130937,
+            "executed_solver_queries": 11,
+            "cached_bodies": 1
+          }
+        ]
+      }
+    ]
+  },
+  "proof_frontier": {
+    "status": "proof_failure",
+    "interpretation": "The stronger models expose obligations that earlier selected checks did not generate. The final run reports refinement errors, not a compiler crash or timeout.",
+    "remaining": [
+      "The arbitrary keep_suffix_len accepted by drain_visible_to_suffix_match needs a valid-split precondition and a proved caller contract.",
+      "The opening drain needs a relation between the selected tag index, its delimiter, and the matched end position.",
+      "Exact drained/emitted contents require owner/destructor effects that account for forgotten iterators."
+    ],
+    "scope_limit": "The suffix helper contract is verified. The complete streaming parser and the complete Codex workspace remain unverified."
+  },
+  "evidence": {
+    "path": "tools/flux/parser-slices-evidence.json.gz",
+    "sha256": "01047b2e8489c31d08882b137c7f5ec9bda1493cd8d3d791ceacaf29564863d2",
+    "bytes": 680677,
+    "files": 96
+  }
+}
