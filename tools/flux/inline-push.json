@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "updates": "Readable state contracts on the inline parser output helpers, two checked compositional lemmas, and recovery of a complete crate coverage map after the checker join fix.",
+  "base_commit": "55e374419c702696347573b02c1841da47fc929a",
+  "source_patch_sha256": "3c8b26973efffb2e900ac3577697fa705e7b5305a5532b1e59ca7d5ce07047b3",
+  "source_patch_scope": "Rust change relative to base; this ledger and evidence archive are excluded.",
+  "flux_commit": "c347e898a771490e2c4bf3d89476a768063ff3ae",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/22",
+  "macro_dependency_revision": "4514241fb44edbb2ba7cb5cdca2b6ad3673a1234",
+  "macro_note": "The existing macro dependency is unchanged; the separate verifier includes the join fix.",
+  "new_guarantees": [
+    "push_visible_prefix preserves extraction count; an empty input preserves the exact visible text.",
+    "drain_visible_to_suffix_match preserves extraction count and whether a tag is active.",
+    "A checked caller lemma preserves extraction count after appending arbitrary visible text.",
+    "A checked caller lemma preserves exact visible text and extraction count after two empty appends."
+  ],
+  "guarantee_limits": [
+    "These guarantees apply on normal return; may_panic does not claim absence of panics.",
+    "Vec contents and active-tag payload contents are not modeled by these contracts; len and is_some are explicit.",
+    "The push_str body still lacks a proved index bound from find_next_open. These helper contracts do not prove whole-parser correctness."
+  ],
+  "checked_scope": [
+    {
+      "package": "codex-utils-string",
+      "handwritten_bodies": 4,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-utils-image",
+      "handwritten_bodies": 3,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-history",
+      "handwritten_bodies": 2,
+      "generated_bodies": 0
+    },
+    {
+      "package": "codex-exec-server",
+      "handwritten_bodies": 4,
+      "generated_bodies": 1
+    },
+    {
+      "package": "codex-utils-stream-parser",
+      "handwritten_bodies": 18,
+      "generated_bodies": 15
+    }
+  ],
+  "handwritten_bodies": 31,
+  "new_handwritten_bodies": 4,
+  "whole_parser_map": {
+    "status": "proof_failure",
+    "mapping_status": "complete_observations",
+    "handwritten_statuses": {
+      "accepted_with_observed_models": 29,
+      "check_error": 19,
+      "enclosing_body_obligation": 15,
+      "no_body": 2
+    },
+    "remaining_errors": [
+      "assistant_text::AssistantTextStreamParser::finish",
+      "citation::CitationStreamParser::new",
+      "<citation::CitationStreamParser as stream_text::StreamTextParser>::push_str",
+      "<citation::CitationStreamParser as stream_text::StreamTextParser>::finish",
+      "citation::strip_citations",
+      "inline_hidden_tag::InlineHiddenTagParser::<T>::find_next_open",
+      "inline_hidden_tag::InlineHiddenTagParser::<T>::max_open_prefix_suffix_len",
+      "<inline_hidden_tag::InlineHiddenTagParser<T> as stream_text::StreamTextParser>::push_str",
+      "proposed_plan::map_segments",
+      "proposed_plan::strip_proposed_plan_blocks",
+      "proposed_plan::extract_proposed_plan_text",
+      "tagged_line_parser::TaggedLineParser::<T>::parse",
+      "tagged_line_parser::TaggedLineParser::<T>::finish",
+      "tagged_line_parser::TaggedLineParser::<T>::finish_line",
+      "tagged_line_parser::TaggedLineParser::<T>::is_tag_prefix",
+      "tagged_line_parser::TaggedLineParser::<T>::match_open",
+      "tagged_line_parser::TaggedLineParser::<T>::match_close",
+      "tagged_line_parser::push_segment",
+      "<utf8_stream::Utf8StreamParserError as std::fmt::Display>::fmt"
+    ],
+    "note": "Accepted inferred bodies are not counted as newly specified contracts. Closure obligations and bodies without implementations are separate. Other platforms/features remain unattempted."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1138,
+      "ignored": 7
+    },
+    "native_parser_tests": {
+      "passed": 30,
+      "skipped": 0
+    },
+    "mutations": [
+      {
+        "name": "prefix-count",
+        "old": "#[ensures(out.extracted.len() == old(out.extracted.len()))]",
+        "new": "#[ensures(out.extracted.len() == old(out.extracted.len()) + 1)]",
+        "selection": [
+          "def:InlineHiddenTagParser::<T>::push_visible_prefix"
+        ],
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "empty-prefix-text",
+        "old": "#[ensures(!pending.is_empty() || out.visible_text == old(out.visible_text))]",
+        "new": "#[ensures(!pending.is_empty() || out.visible_text != old(out.visible_text))]",
+        "selection": [
+          "def:InlineHiddenTagParser::<T>::push_visible_prefix"
+        ],
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "drain-active",
+        "old": "#[ensures(self.active.is_some() == old(self.active.is_some()))]",
+        "new": "#[ensures(self.active.is_some() != old(self.active.is_some()))]",
+        "selection": [
+          "def:InlineHiddenTagParser::<T>::drain_visible_to_suffix_match"
+        ],
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      },
+      {
+        "name": "false-lemma",
+        "old": "        out.extracted.len() == count",
+        "new": "        out.extracted.len() != count",
+        "selection": [
+          "def:inline_hidden_tag::state_proofs::visible_prefix_preserves_extraction_count"
+        ],
+        "status": "proof_failure",
+        "expected_diagnostic": "refinement type",
+        "diagnostic_found": true,
+        "checker_crash": false,
+        "timed_out": false,
+        "source_restored": true
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 2.82,
+          "checker_ms": 239,
+          "body_ms": 227,
+          "solver_ms": 179,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.467,
+          "checker_ms": 101,
+          "body_ms": 44,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 2.67,
+          "checker_ms": 92,
+          "body_ms": 83,
+          "solver_ms": 64,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.417,
+          "checker_ms": 46,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 12.891,
+          "checker_ms": 127,
+          "body_ms": 76,
+          "solver_ms": 38,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.07,
+          "checker_ms": 84,
+          "body_ms": 34,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 27.18,
+          "checker_ms": 4161,
+          "body_ms": 3657,
+          "solver_ms": 3301,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 10.397,
+          "checker_ms": 4367,
+          "body_ms": 341,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 2.771,
+          "checker_ms": 1275,
+          "body_ms": 1164,
+          "solver_ms": 672,
+          "executed_solver_queries": 14,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.571,
+          "checker_ms": 1134,
+          "body_ms": 464,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 14
+        }
+      }
+    ],
+    "performance_note": "Cold means an empty proof-cache namespace, not an empty Cargo build cache. Wall time includes compilation and checker setup; cached solver queries are zero across all five packages. No claim that the added lemmas themselves caused the speedup."
+  },
+  "next_obligations": [
+    "Express and verify bounds on find_next_open optional tuple payloads with readable contracts.",
+    "Model filter_map/min_by and string search sufficiently to preserve the bounds through the existing implementation.",
+    "Extend readable String field and model expressions, then prove push_str behavior and buffered suffix boundaries.",
+    "Continue the complete Codex map; remaining crate errors and unattempted projects remain open."
+  ],
+  "evidence": {
+    "path": "tools/flux/inline-push-evidence.json.gz",
+    "sha256": "7ea337f3af7bddc53df2723ce80b3616e67c5a351d8df3bd06b557fe8f46b491",
+    "bytes": 688121,
+    "files": 96
+  }
+}
