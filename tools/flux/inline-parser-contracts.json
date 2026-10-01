@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "updates": "Extends actual stream-parser contracts beyond the UTF-8 adapter into concrete inline parsing and its shared output type.",
+  "base_commit": "80dfb68d5d740f616d57107095ad6ddb3e1715b7",
+  "source_patch_sha256": "b50645a2b2512807f9c0c6ac7e8c3977043868a3a5628df3646b90992b964741",
+  "flux_commit": "79b1fedec71c9fa40c24617bad1bdc9ef1cae2d5",
+  "contracts": [
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::into_inner_lossy",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": false,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "inline_hidden_tag::InlineHiddenTagParser::<T>::new",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "<inline_hidden_tag::InlineHiddenTagParser<T> as stream_text::StreamTextParser>::finish",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "inline_hidden_tag::longest_suffix_prefix_len",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "inline_hidden_tag::state_proofs::finish_clears_state",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "inline_hidden_tag::state_proofs::repeated_finish_is_empty",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "<stream_text::StreamTextChunk<T> as std::default::Default>::default",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "stream_text::StreamTextChunk::<T>::is_empty",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "new"
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::new",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::push_bytes",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::finish",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "utf8_stream::Utf8StreamParser::<P>::into_inner",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "utf8_stream::state_proofs::first_chunk",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    },
+    {
+      "def_path": "utf8_stream::state_proofs::two_errors_preserve_remainder",
+      "status": "accepted_with_observed_models",
+      "explicit_contract": true,
+      "generated": false,
+      "layer": "previous_utf8_regression"
+    }
+  ],
+  "properties": [
+    "Construction starts with empty pending text and no active tag.",
+    "On normal return, finish clears pending text and the active tag.",
+    "finish emits exactly one extraction iff a tag was active at entry; it returns empty visible text for that case and the exact entry pending text otherwise.",
+    "StreamTextChunk default is empty; is_empty exactly reflects visible text and extracted-item count.",
+    "The suffix helper returns a byte count bounded by the input and strictly below a nonempty delimiter length; that count is a delimiter UTF-8 boundary.",
+    "Checked lemmas call the real finish implementation to prove reset state and that a second finish produces no duplicate output."
+  ],
+  "readability": "Short imported requires/ensures/refined/may_panic forms; Option fields use is_some/is_none with Rust type witnesses, and string slices support is_char_boundary. Lemmas are ordinary Rust functions. cfg_attr wrappers remain.",
+  "model_trust": "Audited String empty/clear/length/dereference/concatenation facts, usize/i32 inclusive-range envelope bounds, and delegated Rev bounds. Bounds models grant no exact size/exhaustion capability. Literal &str Pattern has a panic capability but no matching-content relation. See Flux handoff/COLLECTION-MODELS.md.",
+  "panic_scope": "Constructor validation, callbacks, allocation, and generic Drop can panic. Parser trait declarations explicitly allow panics; implementation postconditions cover normal returns. No catch-unwind state guarantee or complete destructor-effect proof is claimed.",
+  "validation": {
+    "flux_regression": {
+      "command": "cargo x test",
+      "passed": 1136,
+      "ignored": 7
+    },
+    "frontend_unit_tests_passed": 14,
+    "native_erasure_tests_passed": 3,
+    "native_model_tests_passed": 14,
+    "native_command": "cargo test -p flux-attrs-impl -p flux-attrs -p flux-alloc -p flux-core",
+    "rustdoc": "Compiles; 797 documentation-only external-spec examples intentionally ignored.",
+    "codex_native": {
+      "command": "just test -p codex-utils-stream-parser",
+      "passed": 30,
+      "skipped": 0
+    },
+    "native_parser_cases": 537,
+    "native_scope": "All character-boundary chunk partitions of five complete/incomplete-tag inputs; exact text, payloads and repeated finishing checked. This execution coverage does not prove general push behavior.",
+    "mutations": [
+      "Retain the active tag",
+      "Omit pending clear",
+      "Discard visible text",
+      "Omit extracted payload",
+      "Return the full delimiter length",
+      "Remove the delimiter boundary guard"
+    ],
+    "mutation_result": "All six fail proof obligations. A seventh experiment adds the desired buffered-text boundary postcondition and also fails; it records a missing model rather than an implementation defect.",
+    "mutation_flux_commit": "dba4f73c29003e1d1eb71b3c12065b29f945c3dd",
+    "mutation_scope": "Mutants ran before the small core-resolution fix; the final commit rechecks all 14 handwritten positive bodies. Each raw run records its exact verifier and model identity.",
+    "restoration": "Every experiment restores the exact positive source patch hash.",
+    "performance": {
+      "uncached": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 1086,
+          "body_ms": 993,
+          "solver_ms": 598,
+          "executed_solver_queries": 11,
+          "cached_bodies": 0
+        }
+      ],
+      "cached": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 1047,
+          "body_ms": 396,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 11
+        }
+      ]
+    },
+    "elapsed_seconds": {
+      "uncached": 2.469,
+      "cached": 2.469
+    },
+    "performance_scope": "Single host/default-feature observations. Count handwritten bodies separately from generated Rust type witnesses. Cached solver results do not eliminate frontend/body-check costs.",
+    "format": "cargo fmt --all and just fmt passed"
+  },
+  "whole_crate_attempt": {
+    "status": "checker_or_compiler_crash",
+    "mapping_status": "incomplete_or_unavailable",
+    "observed_counts": [
+      {
+        "accepted_with_observed_models": 5,
+        "check_error": 9,
+        "enclosing_body_obligation": 20,
+        "interrupted": 1,
+        "not_attempted": 95,
+        "no_body": 2
+      }
+    ],
+    "crash": "Generic inline push_str reaches type_env.rs:473 assertion !scope.has_free_vars(ty). A standalone reproduction from the actual source reproduces it on the final Flux commit; simple Option/String loops do not.",
+    "other_obligations": "find/min_by/max and generic closure effects; String index/drain boundary facts; caller allocation effects; collection capabilities. No complete whole-crate map or proof is claimed."
+  },
+  "remaining": [
+    "Fix the scoped-variable loop-shape crash and resume the interrupted push_str body and downstream callers.",
+    "Preserve generic reference-pattern contents to derive buffered-text boundaries from successful suffix matches.",
+    "Prove longest-match behavior, tag selection, push transitions, and extraction payload contents.",
+    "Propagate the contracts through all concrete parser implementations and their callers.",
+    "Continue across the remaining Codex corpus and platform/feature configurations."
+  ],
+  "scope": "Fourteen selected handwritten bodies (seven new, seven previous UTF-8 regressions); 11 generated helper bodies are excluded from that count. Dependency proofs are not collected. The broader crate run crashes and remains incomplete.",
+  "evidence": {
+    "file": "inline-parser-evidence.json.gz",
+    "sha256": "c6301ba8d08ad1c3b4f7a78b75a4e0b1faade71366efe0302803ad0e0198db14"
+  },
+  "reproduce": "Build the recorded Flux commit, then use the report.json only_check filters with tools/codex/corpus.py check --source <prepared-codex> --flux <flux> --package codex-utils-stream-parser --timeout 120 --offline --proof-cache <cache> --output <fresh-directory>. Omit filters to reproduce the broader interrupted attempt."
+}
