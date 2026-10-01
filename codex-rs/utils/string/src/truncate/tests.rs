@@ -105,6 +105,45 @@ fn split_string_respects_utf8_boundaries() {
 }
 
 #[test]
+fn split_string_matches_boundary_oracle() {
+    // Include all UTF-8 widths, combining marks, joined emoji, and embedded NUL.
+    let texts = ["", "abc", "é中😀", "a\u{301}b", "👩\u{200d}💻", "\0é\0"];
+    for text in texts {
+        let boundaries: Vec<_> = (0..=text.len())
+            .filter(|&offset| text.is_char_boundary(offset))
+            .collect();
+        let budgets: Vec<_> = (0..=text.len() + 4)
+            .chain([usize::MAX - 1, usize::MAX])
+            .collect();
+        for &beginning_bytes in &budgets {
+            for &end_bytes in &budgets {
+                let prefix_end = boundaries
+                    .iter()
+                    .copied()
+                    .filter(|&offset| offset <= beginning_bytes)
+                    .max()
+                    .unwrap();
+                let suffix_start = boundaries
+                    .iter()
+                    .copied()
+                    .find(|&offset| offset >= prefix_end && text.len() - offset <= end_bytes)
+                    .unwrap();
+                let expected = (
+                    text[prefix_end..suffix_start].chars().count(),
+                    &text[..prefix_end],
+                    &text[suffix_start..],
+                );
+                assert_eq!(
+                    split_string(text, beginning_bytes, end_bytes),
+                    expected,
+                    "text={text:?}, beginning_bytes={beginning_bytes}, end_bytes={end_bytes}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
 fn truncate_with_token_budget_returns_original_when_under_limit() {
     let s = "short output";
     let limit = 100;
