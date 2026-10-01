@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "implemented_change": "Verify the index returned by InlineHiddenTagParser::find_next_open using inferred callback summaries across enumerate, filter_map, min_by, and map.",
+  "codex_contract": "#[ensures(result.is_none_or(|(_, index)| index < self.specs.len()))]",
+  "caller_obligation": "push_str uses the returned index to select self.specs[spec_idx].",
+  "mechanism": "FilterMap retains an inferred output predicate checked against its callback. min_by returns an item satisfying the iterator predicate. Associated value sorts and substituted predicate applications normalize, and scalar tuple fields share the whole-tuple inference predicate.",
+  "base_commit": "73736c58b0664ba5d64a02f10601f1acac300d7f",
+  "source_patch_sha256": "39a358c16493c1ff73f3bcb250c34bbbf25787f49067a66900e7245ad92bf005",
+  "source_patch_scope": "The captured patch adds specs to the parser state abstraction and retains the checked return-index guarantee. Runtime statements are identical to the base commit.",
+  "flux_commit": "792dd6e885817a9ff708b67a0ce53c8694872002",
+  "iterator_models_commit": "31552f1e1b10598e835b89df045ce4c5db1f7b2e",
+  "iterator_models_pr": "https://github.com/sushi-shi/flux/pull/27",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/28",
+  "integration": {
+    "macro_dependency": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+    "checker_and_models": "792dd6e885817a9ff708b67a0ce53c8694872002"
+  },
+  "model_audit": {
+    "rust_commit": "8925ea358a0f265ca61026aadc7ecc506c545cbe",
+    "rust_sources": [
+      "library/core/src/iter/adapters/enumerate.rs",
+      "library/core/src/iter/adapters/filter_map.rs",
+      "library/core/src/iter/traits/iterator.rs",
+      "library/core/src/str/mod.rs",
+      "library/core/src/str/pattern.rs",
+      "library/core/src/cmp.rs"
+    ],
+    "trust_boundary": "Standard-library extern specifications are trusted; callback bodies and local Iterator implementations are checked against their refinement obligations.",
+    "counter_bug": "The previous model incremented Enumerate after None and accepted a false index of 2 for a Some/None/Some iterator. Rust returns index 1. The corrected model and regression reject the false claim.",
+    "permanent_exhaustion": "A checked has_fused_model capability, together with a size model, establishes that an exhausted iterator stays exhausted. Future-item bounds require this capability and a nonwrapping size envelope.",
+    "counter_overflow": "The model permits wrapping on normal return. A native probe with overflow checks disabled confirms MAX followed by 0.",
+    "selection_guarantee": "Every selected result satisfies the checked callback output predicate, independently of comparison order."
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1165,
+      "ignored": 7
+    },
+    "native_stream_parser_tests": {
+      "passed": 30,
+      "command": "just test -p codex-utils-stream-parser"
+    },
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 17,
+        "generated_bodies": 15
+      }
+    ],
+    "invalid_return_mutation": {
+      "change": "Return self.specs.len() as the selected index.",
+      "status": "proof_failure",
+      "source_restored": true,
+      "wall_seconds": 43.136
+    },
+    "negative_regressions": [
+      "out-of-bounds selected indices",
+      "false boolean and tuple output guarantees",
+      "incorrect search offsets",
+      "panicking comparison callbacks",
+      "false permanent-exhaustion claims",
+      "incorrect associated-field and predicate-sort claims"
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 8.178,
+          "checker_ms": 368,
+          "body_ms": 351,
+          "solver_ms": 273,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.718,
+          "checker_ms": 62,
+          "body_ms": 50,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 1.969,
+          "checker_ms": 95,
+          "body_ms": 88,
+          "solver_ms": 65,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.518,
+          "checker_ms": 26,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 2.974,
+          "checker_ms": 135,
+          "body_ms": 81,
+          "solver_ms": 37,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.274,
+          "checker_ms": 91,
+          "body_ms": 37,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 12.753,
+          "checker_ms": 3890,
+          "body_ms": 3572,
+          "solver_ms": 3199,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 7.646,
+          "checker_ms": 940,
+          "body_ms": 351,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 37.633,
+          "checker_ms": 36238,
+          "body_ms": 34546,
+          "solver_ms": 33904,
+          "executed_solver_queries": 11,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 6.679,
+          "checker_ms": 5088,
+          "body_ms": 605,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 11
+        }
+      }
+    ],
+    "performance_note": "Uncached proof runs reuse populated Cargo caches. Cached runs execute zero solver queries. The nested search remains a relatively expensive proof; these measurements do not establish whole-project throughput."
+  },
+  "cache_io": {
+    "change": "Buffer JSON cache reads and writes, and explicitly flush writes before returning success.",
+    "baseline_flux_commit": "31552f1e1b10598e835b89df045ce4c5db1f7b2e",
+    "baseline_cached_parser_wall_seconds": 45.888,
+    "buffered_cached_parser_wall_seconds": 6.679,
+    "cache_size_phase": "After the invalid-return mutation; its result is also retained in the cache.",
+    "buffered_warm_cache_bytes_before_mutation": 58802739,
+    "cache_bytes": {
+      "baseline": {
+        "codex-utils-stream-parser.json": 69718828,
+        "codex-utils-image.json": 33733,
+        "codex-history.json": 524,
+        "codex-exec-server.json": 5445116,
+        "codex-utils-string.json": 72925
+      },
+      "buffered": {
+        "codex-utils-stream-parser.json": 69718828,
+        "codex-utils-image.json": 33733,
+        "codex-history.json": 524,
+        "codex-exec-server.json": 5445116,
+        "codex-utils-string.json": 72925
+      }
+    },
+    "validation": "Both cache runs execute zero solver queries. Changing the returned index invalidates the proof and is rejected with both implementations."
+  },
+  "proof_scope": "The retained contract establishes the returned tag index bound on normal return. The selected parser and other recorded bodies are checked with observed models. Complete streaming interpretation, selection optimality, and whole-Codex verification remain open.",
+  "next_work": "Use the index guarantee while checking the actual push_str caller, establish returned search-position boundaries, and reduce the nested search proof cost.",
+  "evidence": {
+    "path": "tools/flux/parser-index-evidence.json.gz",
+    "sha256": "d8151c943dbfb2f174beabfad9368f0c5e965ee8cb465f1a519a847e5efb89ec",
+    "bytes": 1089370,
+    "files": 148
+  }
+}
