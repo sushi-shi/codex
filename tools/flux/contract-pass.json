@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "base_commit": "37c8c2ef488710b4da313fedf39fb0a784e019eb",
+  "flux_commit": "4ee1978ae91d4a92a71a06b3def09f75af17a2ea",
+  "scope": "Incremental contracts in five existing Codex crates; ordinary Rust behavior unchanged.",
+  "rust_files_sha256": {
+    "codex-rs/codex-client/src/retry.rs": "434be27f4f22c60a0fd2371976c702f5ede9d133be6f5a3f5248a880e043106c",
+    "codex-rs/codex-mcp/src/pagination.rs": "f407b81ef07d11b6887d20ca5450f19d6a253c003c88575d37d144a0e4791d25",
+    "codex-rs/guardian-context/src/budget.rs": "f728cbd8694f04af843d63825c054d8f45836923083a829ac5a80ee894a3828e",
+    "codex-rs/guardian-context/src/profile/window.rs": "ae27cf5ab6ed0750c138eec16aec49828a7d4c2be791595a1f28a6f17351cd3b",
+    "codex-rs/utils/stream-parser/src/utf8_stream.rs": "b1a2e742b57d6ce00918048c33f9dd37f8332af5dfb9f0996e2901ad8784ffab",
+    "codex-rs/utils/string/src/lib.rs": "365dfc77a2e7b1d263ed7a4aee503a0c243c13c84e06d09649d46fb9931374f4"
+  },
+  "contracts": [
+    {
+      "area": "string prefixes",
+      "file": "codex-rs/utils/string/src/lib.rs",
+      "function": "take_bytes_at_char_boundary",
+      "property": "UTF-8 prefix bounded by both the byte budget and input; returns the original text when it fits.",
+      "status": "accepted_with_observed_models",
+      "run": "codex-contract-pass-final"
+    },
+    {
+      "area": "HTTP retries",
+      "file": "codex-rs/codex-client/src/retry.rs",
+      "function": "RetryOn::should_retry",
+      "property": "Retry implies attempt < max_attempts and at least one retry policy flag enabled.",
+      "status": "blocked",
+      "blocker": "Missing panic models for http::StatusCode::as_u16 and is_server_error.",
+      "run": "codex-contract-pass-final"
+    },
+    {
+      "area": "MCP pagination",
+      "file": "codex-rs/codex-mcp/src/pagination.rs",
+      "functions": [
+        "collect_paginated",
+        "collect_paginated_with_limit"
+      ],
+      "property": "Successful catalog length is at most the default or supplied item limit.",
+      "status": "blocked",
+      "blocker": "Async opaque-sort environment mismatch in Flux; wrapper interrupted and limited collector body not reached.",
+      "run": "codex-contract-pass-final"
+    },
+    {
+      "area": "Guardian accounting",
+      "file": "codex-rs/guardian-context/src/budget.rs",
+      "functions": [
+        "SectionCost::add_content",
+        "ByteCount::write",
+        "ByteCount::flush"
+      ],
+      "property": "Costs never decrease; successful write reports the exact input length and saturates the counter; flush preserves the counter.",
+      "status": "accepted_with_observed_models",
+      "run": "codex-contract-guardian-restored"
+    },
+    {
+      "area": "Guardian transcript retention",
+      "file": "codex-rs/guardian-context/src/profile/window.rs",
+      "functions": [
+        "TranscriptWindow::new",
+        "TranscriptWindow::insert"
+      ],
+      "property": "Constructor records transcript length; insertion requires an index below that length. Mutable helpers preserve that length.",
+      "status": "accepted_conditionally",
+      "run": "codex-contract-guardian-restored",
+      "remaining": "Mutation helper bodies and callers are not verified. The broader profile check reports VecDeque, index and arithmetic obligations and then crashes in type_env.rs. Helper bodies were not reached after adding their signatures.",
+      "blocked_run": "codex-contract-retention-final"
+    },
+    {
+      "area": "UTF-8 streaming",
+      "file": "codex-rs/utils/stream-parser/src/utf8_stream.rs",
+      "type": "Utf8StreamParser",
+      "property": "At most three undecoded bytes remain between calls; constructor starts with zero.",
+      "status": "constructor_accepted_invariant_unproved",
+      "run": "codex-contract-pass-final",
+      "blocker": "Missing UTF-8 decoder and Vec mutation facts; push_bytes and finish do not establish the invariant."
+    }
+  ],
+  "validation": {
+    "runtime": {
+      "command": "just test -p codex-utils-string -p codex-utils-stream-parser -p codex-client -p codex-guardian-context -p codex-mcp",
+      "passed": 311,
+      "skipped": 0,
+      "nextest_run_id": "d76848ab-ee11-405f-b801-da0fa22512d2",
+      "note": "Run through the pinned Flux Nix shell with just, cargo-nextest, uv, dotslash and patchelf. Later edits only adjust cfg(flux) annotations."
+    },
+    "format": "just fmt passed",
+    "negative_controls": {
+      "run": "codex-contract-accounting-mutants",
+      "rejected": [
+        "Reset text_bytes to zero in add_content",
+        "Do not increment ByteCount in write",
+        "Reset ByteCount to zero in flush"
+      ],
+      "restoration": "Original budget.rs restored in finally; all three original bodies accepted in codex-contract-guardian-restored."
+    },
+    "proof_scope": "Targeted bodies only, strict overflow and no-panic enabled. Unselected functions and external models are assumptions; dependency proof closure is not collected. No whole-crate or whole-Codex verification claim.",
+    "performance": "Individual body times, solver times and Cargo elapsed times are in the archived reports. These are single observations, not comparative benchmarks."
+  },
+  "reproduce": "At the pinned Flux commit, run tools/codex/corpus.py check with --source pointing to a prepared clone of this branch, --flux pointing to the built Flux checkout, and the packages/only_check filters from the corresponding archived report.json. Use a new --output directory for each run; --timeout 90 --offline. No further Flux changes are required.",
+  "evidence": {
+    "file": "contract-pass-evidence.json.gz",
+    "sha256": "1139495ed5852d95af0cb2f942f21ce30f25bd8b52b59d13d649ec1860388de3",
+    "contents": "JSON mapping each run to reports, exact source patches, per-function maps, diagnostics and available timings."
+  },
+  "next_obligations": [
+    "Propagate retention index bounds through EntryPool and its callers; relate token totals to retained entries.",
+    "Discharge retry HTTP status panic obligations without weakening the retry limit.",
+    "Establish UTF-8 rollback and remainder bounds with decoder and Vec models.",
+    "Resume pagination length proof after the async checker blocker."
+  ]
+}

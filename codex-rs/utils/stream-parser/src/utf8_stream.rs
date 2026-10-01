@@ -42,8 +42,11 @@ impl Error for Utf8StreamParserError {}
 /// This is useful when upstream data arrives as `&[u8]` and a code point may be split across
 /// chunk boundaries (for example `0xC3` followed by `0xA9` for `é`).
 #[derive(Debug)]
+#[cfg_attr(flux, flux::refined_by(pending: int))]
+#[cfg_attr(flux, flux::invariant(0 <= pending && pending <= 3))]
 pub struct Utf8StreamParser<P> {
     inner: P,
+    #[cfg_attr(flux, flux::field(Vec<u8>[pending]))]
     pending_utf8: Vec<u8>,
 }
 
@@ -51,6 +54,7 @@ impl<P> Utf8StreamParser<P>
 where
     P: StreamTextParser,
 {
+    #[cfg_attr(flux, flux::sig(fn(P) -> Utf8StreamParser<P>[0]))]
     pub fn new(inner: P) -> Self {
         Self {
             inner,

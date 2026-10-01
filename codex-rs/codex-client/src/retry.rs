@@ -12,13 +12,20 @@ pub struct RetryPolicy {
 }
 
 #[derive(Debug, Clone)]
+#[cfg_attr(flux, flux::refined_by(rate_limited: bool, server_error: bool, transport: bool))]
 pub struct RetryOn {
+    #[cfg_attr(flux, flux::field(bool[rate_limited]))]
     pub retry_429: bool,
+    #[cfg_attr(flux, flux::field(bool[server_error]))]
     pub retry_5xx: bool,
+    #[cfg_attr(flux, flux::field(bool[transport]))]
     pub retry_transport: bool,
 }
 
 impl RetryOn {
+    #[cfg_attr(flux, flux::sig(fn(&RetryOn[@policy], &TransportError, attempt: u64, max_attempts: u64)
+        -> bool{retry: retry => attempt < max_attempts &&
+            (policy.rate_limited || policy.server_error || policy.transport)}))]
     pub fn should_retry(&self, err: &TransportError, attempt: u64, max_attempts: u64) -> bool {
         if attempt >= max_attempts {
             return false;
