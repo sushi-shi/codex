@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "working_rule": "Start from the implementation and the property a caller needs. Infer summaries, generate and check proof support for missing facts, and retain explicit contracts for stable intent or an identified abstraction boundary.",
+  "implemented_change": "Flux passes the input Option presence into map, map_or, and_then callback argument refinements. Safe captured slice access now verifies from ordinary function code, with no handwritten precondition or callback contract.",
+  "trust_boundary": "These are reviewed standard-library models. The model bodies themselves are trusted; client obligations are verified against them. This layer does not implement automatic interprocedural summary or lemma generation.",
+  "codex_application": "The reduced enumerate().next().map(...) index obligation verifies. The original find_next_open iterator chain remains an open obligation; no unproved index contract was installed.",
+  "base_commit": "821b07e0f95adb5968e49199efe6404b23063a22",
+  "source_patch_sha256": "ca6b3b7b870b35cd25d77eebd33b308dacaaa8fc48ca86b0452c7931023aec19",
+  "source_patch_scope": "AGENTS.md changes relative to base, before adding this ledger and evidence archive.",
+  "flux_commit": "8110f5b1eedf0dd4e7f91e7ce4aef2e8ffdbc602",
+  "flux_pr": "https://github.com/sushi-shi/flux/pull/24",
+  "integration": {
+    "macro_dependency": "25ed63b9d0b5a749136b647fc6a6f6c82f76a651",
+    "checker_and_models": "8110f5b1eedf0dd4e7f91e7ce4aef2e8ffdbc602"
+  },
+  "validation": {
+    "flux_regressions": {
+      "passed": 1145,
+      "ignored": 7
+    },
+    "annotation_free_examples": {
+      "functions": [
+        "optional_head",
+        "head_or_default",
+        "optional_nonzero_head"
+      ],
+      "baseline_failures": 3,
+      "current_failures": 0,
+      "baseline_sysroot_commit": "4514241fb44edbb2ba7cb5cdca2b6ad3673a1234"
+    },
+    "negative_cases": [
+      "unchecked Some callbacks for all three methods",
+      "inverted presence guard",
+      "false Some guarantee for None input",
+      "false default result"
+    ],
+    "rechecked_scope": [
+      {
+        "package": "codex-utils-string",
+        "handwritten_bodies": 4,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-utils-image",
+        "handwritten_bodies": 3,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-history",
+        "handwritten_bodies": 2,
+        "generated_bodies": 0
+      },
+      {
+        "package": "codex-exec-server",
+        "handwritten_bodies": 4,
+        "generated_bodies": 1
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "handwritten_bodies": 16,
+        "generated_bodies": 14
+      }
+    ],
+    "performance": [
+      {
+        "package": "codex-utils-string",
+        "uncached_solver": {
+          "wall_seconds": 1.618,
+          "checker_ms": 242,
+          "body_ms": 232,
+          "solver_ms": 181,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.467,
+          "checker_ms": 112,
+          "body_ms": 46,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-image",
+        "uncached_solver": {
+          "wall_seconds": 1.618,
+          "checker_ms": 95,
+          "body_ms": 84,
+          "solver_ms": 62,
+          "executed_solver_queries": 3,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 1.467,
+          "checker_ms": 54,
+          "body_ms": 17,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 3
+        }
+      },
+      {
+        "package": "codex-history",
+        "uncached_solver": {
+          "wall_seconds": 2.931,
+          "checker_ms": 137,
+          "body_ms": 80,
+          "solver_ms": 43,
+          "executed_solver_queries": 2,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.121,
+          "checker_ms": 87,
+          "body_ms": 35,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 2
+        }
+      },
+      {
+        "package": "codex-exec-server",
+        "uncached_solver": {
+          "wall_seconds": 10.659,
+          "checker_ms": 4051,
+          "body_ms": 3559,
+          "solver_ms": 3209,
+          "executed_solver_queries": 4,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 10.546,
+          "checker_ms": 4434,
+          "body_ms": 345,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 4
+        }
+      },
+      {
+        "package": "codex-utils-stream-parser",
+        "uncached_solver": {
+          "wall_seconds": 2.721,
+          "checker_ms": 1279,
+          "body_ms": 1172,
+          "solver_ms": 687,
+          "executed_solver_queries": 13,
+          "cached_bodies": 0
+        },
+        "cached_solver": {
+          "wall_seconds": 2.673,
+          "checker_ms": 1160,
+          "body_ms": 472,
+          "solver_ms": 0,
+          "executed_solver_queries": 0,
+          "cached_bodies": 13
+        }
+      }
+    ],
+    "performance_note": "Uncached means an empty proof-cache namespace with populated Cargo build caches. Wall time includes compiler and checker setup. Cached selected checks execute zero solver queries.",
+    "whole_parser": {
+      "status": "proof_failure",
+      "handwritten_counts": {
+        "accepted_with_observed_models": 27,
+        "check_error": 19,
+        "enclosing_body_obligation": 15,
+        "no_body": 2
+      },
+      "wall_seconds": 8.531,
+      "performance": [
+        {
+          "timings": "codex_utils_stream_parser-timings.json",
+          "checker_ms": 5473,
+          "body_ms": 5281,
+          "solver_ms": 3576,
+          "executed_solver_queries": 66,
+          "cached_bodies": 0
+        }
+      ],
+      "scope_note": "Observed body acceptance is diagnostic, not proof of complete parser behavior. Two preservation-only lemmas were removed in the preceding layer."
+    }
+  },
+  "next_obligation": {
+    "caller": "InlineHiddenTagParser::push_str indexes self.specs[spec_idx].",
+    "needed_fact": "find_next_open returns a spec_idx below self.specs.len() whenever it returns Some.",
+    "reduction": "The guarded Option model proves enumerate().next().map(...) bounds. Mapping before next still fails, including for a scalar range. Investigate callback result refinements and their propagation through associated Item types.",
+    "discarded_prototype": "Adding filter_map and min_by extern models alone did not prove the iterator bounds. Their patch and probe diagnostics are archived for follow-up."
+  },
+  "evidence": {
+    "path": "tools/flux/inference-first-evidence.json.gz",
+    "sha256": "30eb9593413b2e3ea6a051c685072ec4174080aea9bb34c37635e892b5b772e3",
+    "bytes": 491960,
+    "files": 67
+  }
+}
